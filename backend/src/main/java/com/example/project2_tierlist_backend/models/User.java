@@ -47,11 +47,6 @@ public class User {
     public void setImage(String image) { this.image = image; }
 
     public void setPassword(String password) {
-        // Only hash password if it's not already hashed
-        if (!password.startsWith("$2a$10$")) {
-            this.password = new BCryptPasswordEncoder().encode(password);
-        } else {
-            this.password = password;
-        }
+        this.password = password; // Store plaintext
     }
 }

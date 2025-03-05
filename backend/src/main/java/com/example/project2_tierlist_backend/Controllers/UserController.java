@@ -26,7 +26,10 @@ public class UserController {
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             return ResponseEntity.badRequest().body("⚠️ Email already exists!");
         }
-        user.setPassword(passwordEncoder.encode(user.getPassword())); // ✅ Hash the password before saving
+
+        System.out.println("🔍 [REGISTER] Raw Password: " + user.getPassword());
+
+        user.setPassword(user.getPassword()); // Store as plaintext (INSECURE)
         userRepository.save(user);
         return ResponseEntity.ok("✅ User registered successfully!");
     }
@@ -37,16 +40,17 @@ public class UserController {
         Optional<User> user = userRepository.findByEmail(userDetails.getEmail());
 
         if (user.isPresent()) {
-            String storedHashedPassword = user.get().getPassword();
-            String enteredPassword = userDetails.getPassword(); // Should be plain text, not hashed
+            String storedPassword = user.get().getPassword();
+            String enteredPassword = userDetails.getPassword();
 
-            System.out.println("🔍 Stored Hashed Password: " + storedHashedPassword);
-            System.out.println("🔍 Entered Raw Password: " + enteredPassword);
+            System.out.println("🔍 [LOGIN] Stored Password: " + storedPassword);
+            System.out.println("🔍 [LOGIN] Entered Password: " + enteredPassword);
 
-            // Compare raw password with stored hashed password
-            if (passwordEncoder.matches(enteredPassword, storedHashedPassword)) {
+            // Simple string comparison (INSECURE)
+            if (enteredPassword.equals(storedPassword)) {
                 return ResponseEntity.ok("✅ Login successful!");
             } else {
+                System.out.println("❌ [LOGIN] Password Mismatch");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("❌ Invalid email or password.");
             }
         }
