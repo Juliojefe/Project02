@@ -47,6 +47,7 @@ Temporary Items
 
 # local env files
 .env*.local
+application.properties
 
 # typescript
 *.tsbuildinfo
