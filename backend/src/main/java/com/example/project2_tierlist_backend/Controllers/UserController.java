@@ -8,11 +8,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
 
+
 import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/users")
+@CrossOrigin(origins = "http://localhost:8081")
 public class UserController {
 
     @Autowired
@@ -61,6 +63,12 @@ public class UserController {
     @GetMapping("/")
     public List<User> getAllUsers() {
         return userRepository.findAll();
+    }
+
+    // testing backend and frontend connection
+    @GetMapping("/title")
+    public String title() {
+        return "This is a string from userController in the backend. \n(Added for testing backend and frontend connection)";
     }
 
     // Get User by ID

@@ -3,7 +3,7 @@ import { router } from "expo-router";
 
 const SettingsPage = () => {
   const handleLandingPage = () => {
-    router.replace("/landing");
+    router.push("/landing");
   };
 
   const handleAccountDetails = () => {

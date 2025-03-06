@@ -37,13 +37,13 @@ const LandingPage = () => {
 
   // View Settings Functionality
   const handleSettings = () => {
-    router.replace("/settings");
+    router.push("/settings");
   };
 
   // Logout Functionality
   const handleLogout = () => {
     // should go back to home page
-    alert("*Pressed button to logout*");
+    router.replace("/");
   };
 
   return (

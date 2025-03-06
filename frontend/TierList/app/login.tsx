@@ -15,6 +15,7 @@ import { router } from "expo-router";
 
   const handleLogin = () => {
     console.log("Login pressed", { username, password });
+    router.replace("/landing"); // for temporary use without having to log in with an account
   };
 
   return (
