@@ -6,10 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+
 import java.util.List;
 
 @RestController
 @RequestMapping("/tierlist_items")
+@CrossOrigin(origins = "http://localhost:8081")
 public class TierListItemController {
 
     @Autowired
