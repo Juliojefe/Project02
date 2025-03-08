@@ -20,6 +20,7 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
+    // Use BCrypt for hashing and verification
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     // User Registration with Hashed Password
@@ -31,8 +32,10 @@ public class UserController {
 
         System.out.println("🔍 [REGISTER] Raw Password: " + user.getPassword());
 
-        user.setPassword(user.getPassword()); // Store as plaintext (INSECURE)
+        String hashedPassword = passwordEncoder.encode(user.getPassword());
+        user.setPassword(hashedPassword);
         userRepository.save(user);
+
         return ResponseEntity.ok("✅ User registered successfully!");
     }
 
@@ -48,8 +51,7 @@ public class UserController {
             System.out.println("🔍 [LOGIN] Stored Password: " + storedPassword);
             System.out.println("🔍 [LOGIN] Entered Password: " + enteredPassword);
 
-            // Simple string comparison (INSECURE)
-            if (enteredPassword.equals(storedPassword)) {
+            if (passwordEncoder.matches(enteredPassword, storedPassword)) {
                 return ResponseEntity.ok("✅ Login successful!");
             } else {
                 System.out.println("❌ [LOGIN] Password Mismatch");
