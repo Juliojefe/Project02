@@ -94,12 +94,27 @@ public class UserController {
 
     // Delete User
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
-        if (userRepository.existsById(id)) {
-            userRepository.deleteById(id);
-            return ResponseEntity.ok("✅ User deleted successfully!");
+    public ResponseEntity<String> deleteUser(@PathVariable Long id, @RequestBody(required = false) Map<String, String> request) {
+        if (request == null || !request.containsKey("password") || request.get("password").isEmpty()) {  // Check if password is provided
+            System.out.println("❌ [DELETE USER] No password provided!");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("❌ Password is required to delete account.");
+        }
+
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            String enteredPassword = request.get("password");
+
+            if (passwordEncoder.matches(enteredPassword, user.getPassword())) {  // Verify password before deleting
+                userRepository.deleteById(id);
+                System.out.println("✅ [DELETE USER] User deleted successfully!");
+                return ResponseEntity.ok("✅ User deleted successfully!");
+            } else {
+                System.out.println("❌ [DELETE USER] Incorrect password!");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("❌ Incorrect password.");
+            }
         } else {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("❌ User not found.");
         }
     }
 
