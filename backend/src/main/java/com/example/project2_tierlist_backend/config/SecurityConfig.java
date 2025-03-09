@@ -12,13 +12,14 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/oauth2/**", "/auth/**").permitAll() // Allow OAuth endpoints
+                        .requestMatchers("/", "/oauth2/**", "/auth/**", "/users/**").permitAll() // Allow OAuth endpoints
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .defaultSuccessUrl("/auth/login/success", true) // Redirect after login
                 )
-                .logout(logout -> logout.logoutSuccessUrl("/")); // Logout URL
+                .logout(logout -> logout.logoutSuccessUrl("/")) // Logout URL
+                .csrf(csrf -> csrf.disable());
 
         return http.build();
     }
