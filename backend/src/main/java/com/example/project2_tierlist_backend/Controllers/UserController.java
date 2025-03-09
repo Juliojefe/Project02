@@ -8,7 +8,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
 
-
+import java.util.Map;
+import java.util.UUID;
 import java.util.List;
 import java.util.Optional;
 
@@ -99,6 +100,65 @@ public class UserController {
             return ResponseEntity.ok("✅ User deleted successfully!");
         } else {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    // Password reset
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@RequestBody Map<String, String> request) {
+        System.out.println("🔍 [DEBUG] forgotPassword() called!");
+
+        String email = request.get("email");
+        System.out.println("🔍 [DEBUG] Email Received: " + email);
+
+        Optional<User> userOpt = userRepository.findByEmail(email);
+
+        if (userOpt.isPresent()) {
+            // Generate a temporary password
+            String tempPassword = UUID.randomUUID().toString().substring(0, 8);
+            User user = userOpt.get();
+            System.out.println("🔍 [FORGOT PASSWORD] Temp Password: " + tempPassword);
+
+            user.setPassword(passwordEncoder.encode(tempPassword)); // Hash temp password
+            userRepository.save(user);
+
+            System.out.println("✅ [FORGOT PASSWORD] Password Updated Successfully!");
+
+            return ResponseEntity.ok("Temporary password: " + tempPassword);
+        } else {
+            System.out.println("❌ [FORGOT PASSWORD] Email Not Found: " + email);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("❌ Email not found.");
+        }
+    }
+
+    // Password update
+    @PutMapping("/update-password")
+    public ResponseEntity<String> updatePassword(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String oldPassword = request.get("oldPassword");
+        String newPassword = request.get("newPassword");
+
+        Optional<User> userOpt = userRepository.findByEmail(email);
+
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            String storedHashedPassword = user.getPassword();
+
+            System.out.println("🔍 [UPDATE PASSWORD] Stored Password (Hashed): " + storedHashedPassword);
+            System.out.println("🔍 [UPDATE PASSWORD] Old Password Entered: " + oldPassword);
+
+            if (passwordEncoder.matches(oldPassword, storedHashedPassword)) {
+                user.setPassword(passwordEncoder.encode(newPassword)); // Hash new password
+                userRepository.save(user);
+                System.out.println("✅ [UPDATE PASSWORD] Password Updated Successfully!");
+                return ResponseEntity.ok("✅ Password updated successfully!");
+            } else {
+                System.out.println("❌ [UPDATE PASSWORD] Incorrect Old Password");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("❌ Incorrect old password.");
+            }
+        } else {
+            System.out.println("❌ [UPDATE PASSWORD] Email Not Found: " + email);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("❌ Email not found.");
         }
     }
 }
