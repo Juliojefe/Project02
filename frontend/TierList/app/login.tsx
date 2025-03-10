@@ -8,14 +8,62 @@ import {
 } from "react-native";
 
 import { router } from "expo-router";
+import axios from "axios";
 
-  const LoginPage = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+const LoginPage = () => {
+  const [loginError, setLoginError] = useState("");
 
-  const handleLogin = () => {
-    console.log("Login pressed", { username, password });
-    router.replace("/landing"); // for temporary use without having to log in with an account
+  const [user, setUser] = useState({
+    email: "",
+    password: "",
+  });
+
+  const handleChange = (name, value) => {
+    setUser((prevUser) => ({
+      ...prevUser,
+      [name]: value,
+    }));
+  };
+
+  const handleLogin = async () => {
+    // Checks to make sure that the user answered all
+    if (!user.email || !user.password) {
+      setLoginError("⚠️ Please enter your email and password.");
+      return;
+    }
+
+    // Checks if the user exists and will be routed to landing page if login is successful
+    try {
+      const response = await axios.post("http://localhost:8080/users/login", {
+        email: user.email,
+        password: user.password,
+      });
+      console.log("User logged in successfully");
+      const userIDResponse = await axios.get(
+        `http://localhost:8080/users/userIDLogin?email=${encodeURIComponent(
+          user.email
+        )}`
+      );
+      // not very security safe since userID can be changed in link to view another user's account
+      router.replace(`/landing?userID=${encodeURIComponent(userIDResponse.data)}`);
+    } catch (error) {
+      if (error.response) {
+        setLoginError(`${error.response.data}`);
+        console.log(
+          "Error registering user (server response): ",
+          error.response.data
+        );
+      } else if (error.request) {
+        setLoginError("Error: No response from server");
+        console.log(
+          "Error registering user (no server response): ",
+          error.request
+        );
+      } else {
+        setLoginError("Error: An unexpected error occurred");
+        console.log("Error registering user (unexpected): ", error.message);
+      }
+    }
   };
 
   return (
@@ -23,12 +71,12 @@ import { router } from "expo-router";
       <View style={styles.card}>
         <Text style={styles.heading}>Welcome Back!</Text>
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>Username</Text>
+          <Text style={styles.label}>Email</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter your username"
-            value={username}
-            onChangeText={setUsername}
+            placeholder="Enter your email"
+            value={user.email}
+            onChangeText={(text) => handleChange("email", text)}
           />
         </View>
         <View style={styles.inputContainer}>
@@ -37,10 +85,11 @@ import { router } from "expo-router";
             style={styles.input}
             placeholder="Enter your password"
             secureTextEntry
-            value={password}
-            onChangeText={setPassword}
+            value={user.password}
+            onChangeText={(text) => handleChange("password", text)}
           />
         </View>
+        <Text style={styles.errorText}>{loginError}</Text>
         <TouchableOpacity style={styles.button} onPress={handleLogin}>
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
@@ -101,8 +150,10 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
   },
+  errorText: {
+    color: "red",
+    fontSize: 16,
+  },
 });
 
 export default LoginPage;
-
-

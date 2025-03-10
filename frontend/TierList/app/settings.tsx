@@ -1,9 +1,12 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 
 const SettingsPage = () => {
+  const { userID } = useLocalSearchParams();
+  
   const handleLandingPage = () => {
-    router.push("/landing");
+    // not very security safe since userID can be changed in link to view another user's account
+    router.push(`/landing?userID=${encodeURIComponent(userID)}`);
   };
 
   const handleAccountDetails = () => {
