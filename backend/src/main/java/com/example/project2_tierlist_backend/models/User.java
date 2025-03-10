@@ -47,6 +47,6 @@ public class User {
     public void setImage(String image) { this.image = image; }
 
     public void setPassword(String password) {
-        this.password = password; // Store plaintext
+        this.password = password;
     }
 }
