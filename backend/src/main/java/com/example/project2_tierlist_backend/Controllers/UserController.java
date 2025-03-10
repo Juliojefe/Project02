@@ -8,7 +8,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
 
-
+import java.util.Map;
+import java.util.UUID;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +21,7 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
+    // Use BCrypt for hashing and verification
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     // User Registration with Hashed Password
@@ -31,8 +33,10 @@ public class UserController {
 
         System.out.println("🔍 [REGISTER] Raw Password: " + user.getPassword());
 
-        user.setPassword(user.getPassword()); // Store as plaintext (INSECURE)
+        String hashedPassword = passwordEncoder.encode(user.getPassword());
+        user.setPassword(hashedPassword);
         userRepository.save(user);
+
         return ResponseEntity.ok("✅ User registered successfully!");
     }
 
@@ -48,8 +52,7 @@ public class UserController {
             System.out.println("🔍 [LOGIN] Stored Password: " + storedPassword);
             System.out.println("🔍 [LOGIN] Entered Password: " + enteredPassword);
 
-            // Simple string comparison (INSECURE)
-            if (enteredPassword.equals(storedPassword)) {
+            if (passwordEncoder.matches(enteredPassword, storedPassword)) {
                 return ResponseEntity.ok("✅ Login successful!");
             } else {
                 System.out.println("❌ [LOGIN] Password Mismatch");
@@ -98,12 +101,86 @@ public class UserController {
 
     // Delete User
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
-        if (userRepository.existsById(id)) {
-            userRepository.deleteById(id);
-            return ResponseEntity.ok("✅ User deleted successfully!");
+    public ResponseEntity<String> deleteUser(@PathVariable Long id, @RequestBody(required = false) Map<String, String> request) {
+        if (request == null || !request.containsKey("password") || request.get("password").isEmpty()) {  // Check if password is provided
+            System.out.println("❌ [DELETE USER] No password provided!");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("❌ Password is required to delete account.");
+        }
+
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            String enteredPassword = request.get("password");
+
+            if (passwordEncoder.matches(enteredPassword, user.getPassword())) {  // Verify password before deleting
+                userRepository.deleteById(id);
+                System.out.println("✅ [DELETE USER] User deleted successfully!");
+                return ResponseEntity.ok("✅ User deleted successfully!");
+            } else {
+                System.out.println("❌ [DELETE USER] Incorrect password!");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("❌ Incorrect password.");
+            }
         } else {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("❌ User not found.");
+        }
+    }
+
+    // Password reset
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@RequestBody Map<String, String> request) {
+        System.out.println("🔍 [DEBUG] forgotPassword() called!");
+
+        String email = request.get("email");
+        System.out.println("🔍 [DEBUG] Email Received: " + email);
+
+        Optional<User> userOpt = userRepository.findByEmail(email);
+
+        if (userOpt.isPresent()) {
+            // Generate a temporary password
+            String tempPassword = UUID.randomUUID().toString().substring(0, 8);
+            User user = userOpt.get();
+            System.out.println("🔍 [FORGOT PASSWORD] Temp Password: " + tempPassword);
+
+            user.setPassword(passwordEncoder.encode(tempPassword)); // Hash temp password
+            userRepository.save(user);
+
+            System.out.println("✅ [FORGOT PASSWORD] Password Updated Successfully!");
+
+            return ResponseEntity.ok("Temporary password: " + tempPassword);
+        } else {
+            System.out.println("❌ [FORGOT PASSWORD] Email Not Found: " + email);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("❌ Email not found.");
+        }
+    }
+
+    // Password update
+    @PutMapping("/update-password")
+    public ResponseEntity<String> updatePassword(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String oldPassword = request.get("oldPassword");
+        String newPassword = request.get("newPassword");
+
+        Optional<User> userOpt = userRepository.findByEmail(email);
+
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            String storedHashedPassword = user.getPassword();
+
+            System.out.println("🔍 [UPDATE PASSWORD] Stored Password (Hashed): " + storedHashedPassword);
+            System.out.println("🔍 [UPDATE PASSWORD] Old Password Entered: " + oldPassword);
+
+            if (passwordEncoder.matches(oldPassword, storedHashedPassword)) {
+                user.setPassword(passwordEncoder.encode(newPassword)); // Hash new password
+                userRepository.save(user);
+                System.out.println("✅ [UPDATE PASSWORD] Password Updated Successfully!");
+                return ResponseEntity.ok("✅ Password updated successfully!");
+            } else {
+                System.out.println("❌ [UPDATE PASSWORD] Incorrect Old Password");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("❌ Incorrect old password.");
+            }
+        } else {
+            System.out.println("❌ [UPDATE PASSWORD] Email Not Found: " + email);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("❌ Email not found.");
         }
     }
 }
