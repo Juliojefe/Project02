@@ -1,26 +1,7 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { router } from "expo-router";
 
 const Index = () => {
-  const [title, setTitle] = useState("");
-  const [loading, setLoading] = useState(true); // Add loading state
-
-  useEffect(() => {
-    const getTitle = async () => {
-      try {
-        const response = await axios.get("http://localhost:8080/users/title");
-        setTitle(response.data);
-        console.log("Response Data: ", response.data);
-      } catch (error) {
-        console.log("Error getting title: ", error);
-      } finally {
-        setLoading(false); // Set loading to false after request
-      }
-    };
-    getTitle();
-  }, []); // Run only once on mount
 
   const handleLogin = () => {
     router.push("/login");
@@ -30,18 +11,9 @@ const Index = () => {
     router.push("/signup");
   };
 
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <Text>Loading...</Text>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Welcome to Our Tier List!</Text>
-      <Text style={styles.description}>{title}</Text>
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Log in</Text>
       </TouchableOpacity>

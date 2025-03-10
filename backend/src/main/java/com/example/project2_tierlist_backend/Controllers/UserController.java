@@ -65,10 +65,17 @@ public class UserController {
         return userRepository.findAll();
     }
 
-    // testing backend and frontend connection
-    @GetMapping("/title")
-    public String title() {
-        return "This is a string from userController in the backend. \n(Added for testing backend and frontend connection)";
+    // Get User's ID by email
+    @GetMapping("/userIDLogin")
+    public ResponseEntity<Object> getIdByEmail(@RequestParam("email") String email) {
+        Optional<User> user = userRepository.findByEmail(email);
+
+        // second check to make sure user exists
+        if (user.isPresent()) {
+            return ResponseEntity.ok(user.get().getId());
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("❌ User doesn't exist.");
+        }
     }
 
     // Get User by ID

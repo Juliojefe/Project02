@@ -8,14 +8,65 @@ import {
 } from "react-native";
 
 import { router } from "expo-router";
+import axios from "axios";
 
-  const SignupPage = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+const SignupPage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [signupError, setSignupError] = useState("");
 
-  const handleSignup = () => {
-    console.log("Signup pressed", { username, password, confirmPassword });
+  const [user, setUser] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+
+  const handleChange = (name, value) => {
+    setUser((prevUser) => ({
+      ...prevUser,
+      [name]: value,
+    }));
+  };
+
+  const handleSignup = async () => {
+    // Checks to make sure that the user answered all 
+    // the fields and passwords are matching
+    if (!user.name || !user.email || !user.password) {
+      setSignupError("⚠️ Please enter your name, email, and password.");
+      return;
+    } else if (!confirmPassword) {
+      setSignupError("⚠️ Please re-enter your password.")
+      return;
+    } else if (user.password != confirmPassword) {
+      setSignupError("⚠️ Passwords don't match.");
+      return;
+    }
+
+    // Checks to create the user and will be routed to login page if account creation is successful
+    try {
+      const response = await axios.post(
+        "http://localhost:8080/users/register",
+        {
+          name: user.name,
+          email: user.email,
+          password: user.password,
+        }
+      );
+      if (response.status === 200 && response.data === "✅ User registered successfully!") {
+        console.log("User logged in successfully");
+        router.push("/login");
+      }
+    } catch (error) {
+      if (error.response) {
+        setSignupError(`${error.response.data}`);
+        console.log("Error registering user (server response): ", error.response.data);
+    } else if (error.request) {
+        setSignupError("Error: No response from server");
+        console.log("Error registering user (no server response): ", error.request);
+    } else {
+        setSignupError("Error: An unexpected error occurred");
+        console.log("Error registering user (unexpected): ", error.message);
+    }
+    }
   };
 
   return (
@@ -23,12 +74,21 @@ import { router } from "expo-router";
       <View style={styles.card}>
         <Text style={styles.heading}>Greetings, let's get you situated.</Text>
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>Username</Text>
+          <Text style={styles.label}>Name</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter your username"
-            value={username}
-            onChangeText={setUsername}
+            placeholder="Enter your Name"
+            value={user.name}
+            onChangeText={(text) => handleChange("name", text)}
+          />
+        </View>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Email</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your Email"
+            value={user.email}
+            onChangeText={(text) => handleChange("email", text)}
           />
         </View>
         <View style={styles.inputContainer}>
@@ -37,8 +97,8 @@ import { router } from "expo-router";
             style={styles.input}
             placeholder="Enter your password"
             secureTextEntry
-            value={password}
-            onChangeText={setPassword}
+            value={user.password}
+            onChangeText={(text) => handleChange("password", text)}
           />
         </View>
         <View style={styles.inputContainer}>
@@ -51,6 +111,7 @@ import { router } from "expo-router";
             onChangeText={setConfirmPassword}
           />
         </View>
+        <Text style={styles.errorText}>{signupError}</Text>
         <TouchableOpacity style={styles.button} onPress={handleSignup}>
           <Text style={styles.buttonText}>Sign up</Text>
         </TouchableOpacity>
@@ -109,6 +170,10 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "white",
+    fontSize: 16,
+  },
+  errorText: {
+    color: "red",
     fontSize: 16,
   },
 });
