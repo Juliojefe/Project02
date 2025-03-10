@@ -1,14 +1,39 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { router } from "expo-router";
-import { useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 const LandingPage = () => {
   // visibility of admin buttons (should only be visible to admin users)
-  const [isAdminPermsVisible, setAdminPermsVisible] = useState(true);
+  const [isAdminPermsVisible, setAdminPermsVisible] = useState(false);
+  const [userName, setUserName] = useState(true);
+  const { userID } = useLocalSearchParams();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    handleGetUserData();
+  }, []);
+
+  const handleGetUserData = async () => {
+    try {
+      const response = await axios.get(`http://localhost:8080/users/${userID}`);
+      setUserName(response.data.name);
+      
+      // haven't tested fully due to no admin user
+      if (response.data.isAdmin) {
+        toggleAdminPermsVisibility();
+      }
+    } catch (error) {
+      console.log("Error getting user's data: ", error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   // Viewing Tier lists
+  // currently goes to creating a tier list
   const handleTierLists = () => {
-    alert("*Pressed button to view tier lists*");
+    router.push(`/tierList?userID=${encodeURIComponent(userID)}`);
   };
 
   const toggleAdminPermsVisibility = () => {
@@ -37,18 +62,29 @@ const LandingPage = () => {
 
   // View Settings Functionality
   const handleSettings = () => {
-    router.push("/settings");
+    // not very security safe since userID can be changed in link to view another user's account
+    router.push(`/settings?userID=${encodeURIComponent(userID)}`);
   };
 
   // Logout Functionality
+  // minor issue of user being able to go back to logged in 
+  // account if they back out with logging out
   const handleLogout = () => {
     // should go back to home page
     router.replace("/");
   };
 
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <Text>Welcome, "User"</Text>
+      <Text>Welcome, {userName}</Text>
 
       <TouchableOpacity style={styles.button} onPress={handleTierLists}>
         <Text style={styles.buttonText}>View Tier Lists</Text>
