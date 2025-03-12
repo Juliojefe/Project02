@@ -1,4 +1,4 @@
-package com.example.project2_tierlist_backend.controllers;
+package com.example.project2_tierlist_backend.Controllers;
 
 import com.example.project2_tierlist_backend.models.User;
 import com.example.project2_tierlist_backend.repository.UserRepository;
