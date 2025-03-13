@@ -48,7 +48,7 @@ const ViewUsersPage = () => {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
-        <View>
+        <View style={styles.listContainer}>
           <Text style={styles.adminSectionTitle}>Admin Users</Text>
           <FlatList
             data={adminUsers}
@@ -98,6 +98,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+  },
+  listContainer: {
+    flex: 1,
+    overflow: "scroll",
   },
   adminSectionTitle: {
     fontSize: 25,
