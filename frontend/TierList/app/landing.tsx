@@ -40,9 +40,9 @@ const LandingPage = () => {
     setAdminPermsVisible(!isAdminPermsVisible);
   };
 
+  // Viewing all users created
   const handleViewUsers = () => {
-    // should go to page of a list of all users (normal users shouldn't be able to get there)
-    alert("*Pressed button to view all users*");
+    router.push(`/viewUsers?userID=${encodeURIComponent(userID)}`);
   };
 
   const handleCreateUsers = () => {
