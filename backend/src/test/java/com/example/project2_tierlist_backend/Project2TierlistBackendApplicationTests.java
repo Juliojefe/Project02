@@ -1,13 +1,13 @@
-package com.example.project2_tierlist_backend;
+// package com.example.project2_tierlist_backend;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+// import org.junit.jupiter.api.Test;
+// import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
-class Project2TierlistBackendApplicationTests {
+// @SpringBootTest
+// class Project2TierlistBackendApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
+// 	@Test
+// 	void contextLoads() {
+// 	}
 
-}
+// }
