@@ -2,6 +2,7 @@ package com.example.project2_tierlist_backend.Controllers;
 
 import com.example.project2_tierlist_backend.models.TierItem;
 import com.example.project2_tierlist_backend.repository.TierItemRepository;
+import com.example.project2_tierlist_backend.services.TierItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -57,6 +58,12 @@ public class TierItemController {
                     return ResponseEntity.ok().<Void>build();
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/populate-items")
+    public String populateItems(@RequestParam String subject, @RequestParam int numItems) {
+        TierItemService.populateItemsForSubject(subject, numItems);
+        return "Items populated for subject: " + subject;
     }
 
 }

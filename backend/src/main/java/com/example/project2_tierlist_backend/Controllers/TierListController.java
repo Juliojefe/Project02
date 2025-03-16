@@ -1,6 +1,6 @@
-package com.example.project2_tierlist_backend.controller;
+package com.example.project2_tierlist_backend.Controllers;
 
-import com.example.project2_tierlist_backend.model.TierList;
+import com.example.project2_tierlist_backend.models.TierList;
 import com.example.project2_tierlist_backend.repository.TierListRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

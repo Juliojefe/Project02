@@ -1,4 +1,4 @@
-package com.example.project2_tierlist_backend.controllers;
+package com.example.project2_tierlist_backend.Controllers;
 
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.web.bind.annotation.*;
