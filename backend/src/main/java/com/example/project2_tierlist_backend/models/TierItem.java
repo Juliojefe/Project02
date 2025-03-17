@@ -16,6 +16,9 @@ public class TierItem {
     @Column(columnDefinition = "TEXT")
     private String image;
 
+    @Column(nullable = true)    //  on delete set null
+    private Long subjectId;
+
     // Constructors
     public TierItem() {}
 
@@ -47,5 +50,13 @@ public class TierItem {
 
     public void setImage(String image) {
         this.image = image;
+    }
+
+    public Long getSubjectId() {
+        return this.subjectId;
+    }
+
+    public void setSubjectId(Long subjectId) {
+        this.subjectId = subjectId;
     }
 }

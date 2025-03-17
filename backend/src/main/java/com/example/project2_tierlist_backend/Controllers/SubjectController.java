@@ -30,7 +30,8 @@ public class SubjectController {
     // get a subject by ID
     @GetMapping("/{id}")
     public ResponseEntity<Subject> getSubjectById(@PathVariable Long id) {
-        Optional<Subject> subject = Optional.ofNullable(subjectRepository.findBySubjectId(id));
+        //Optional<Subject> subject = Optional.ofNullable(subjectRepository.findBySubjectId(id));
+        Optional<Subject> subject = subjectRepository.findById(id);
         return subject.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
@@ -44,7 +45,8 @@ public class SubjectController {
     // update a subject by ID
     @PutMapping("/{id}")
     public ResponseEntity<Subject> updateSubject(@PathVariable Long id, @RequestBody Subject updatedSubject) {
-        Optional<Subject> existingSubject = Optional.ofNullable(subjectRepository.findBySubjectId(id));
+        //Optional<Subject> existingSubject = Optional.ofNullable(subjectRepository.findById(id));
+        Optional<Subject> existingSubject = subjectRepository.findById(id);
 
         if (existingSubject.isPresent()) {
             Subject subject = existingSubject.get();
@@ -61,7 +63,8 @@ public class SubjectController {
     // delete a subject by ID
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSubject(@PathVariable Long id) {
-        Optional<Subject> subject = Optional.ofNullable(subjectRepository.findBySubjectId(id));
+        //Optional<Subject> subject = Optional.ofNullable(subjectRepository.findById(id));
+        Optional<Subject> subject = subjectRepository.findById(id);
         if (subject.isPresent()) {
             subjectRepository.delete(subject.get());
             return ResponseEntity.noContent().build();

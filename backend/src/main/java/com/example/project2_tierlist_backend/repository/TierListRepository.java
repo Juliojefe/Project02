@@ -1,6 +1,6 @@
 package com.example.project2_tierlist_backend.repository;
 
-import com.example.project2_tierlist_backend.model.TierList;
+import com.example.project2_tierlist_backend.models.TierList;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 

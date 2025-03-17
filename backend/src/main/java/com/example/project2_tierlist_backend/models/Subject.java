@@ -32,6 +32,12 @@ public class Subject {
         onCreate();
     }
 
+    public Subject(String name) {
+        this.name = name;
+        isCurrent = false;
+        onCreate();
+    }
+
     public Long getSubjectId() {
         return subjectId;
     }

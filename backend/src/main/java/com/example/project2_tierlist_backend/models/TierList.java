@@ -1,4 +1,4 @@
-package com.example.project2_tierlist_backend.model;
+package com.example.project2_tierlist_backend.models;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -22,6 +22,9 @@ public class TierList {
 
     @Column(nullable = false, columnDefinition = "INT DEFAULT 1")
     private Integer status = 1;
+
+    @Column(nullable = true)    //  on delete set null
+    private Long subjectId;
 
     // Getters and Setters
     public Integer getTierlistId() {
@@ -58,5 +61,13 @@ public class TierList {
 
     public void setStatus(Integer status) {
         this.status = status;
+    }
+
+    public Long getSubjectId() {
+        return this.subjectId;
+    }
+
+    public void setSubjectId(Long subjectId) {
+        this.subjectId = subjectId;
     }
 }
