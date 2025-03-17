@@ -37,7 +37,11 @@ const SignupPage = () => {
       setSignupError("⚠️ Please re-enter your password.")
       return;
     } else if (user.password != confirmPassword) {
-      setSignupError("⚠️ Passwords don't match.");
+      setSignupError("⚠️ Your passwords don't match.");
+      return;
+      // Password Rules
+    } else if ((user.password).length < 6 && ! (user.password).match(/\W/)) {
+      setSignupError("⚠️ Your password must be at least 6 characters and have 1 special character.");
       return;
     }
 
@@ -52,7 +56,6 @@ const SignupPage = () => {
         }
       );
       if (response.status === 200 && response.data === "✅ User registered successfully!") {
-        console.log("User logged in successfully");
         router.push("/login");
       }
     } catch (error) {

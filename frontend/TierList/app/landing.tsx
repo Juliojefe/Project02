@@ -67,11 +67,9 @@ const LandingPage = () => {
   };
 
   // Logout Functionality
-  // minor issue of user being able to go back to logged in 
-  // account if they back out with logging out
   const handleLogout = () => {
     // should go back to home page
-    router.replace("/");
+    router.dismissAll();
   };
 
   if (loading) {
@@ -93,7 +91,7 @@ const LandingPage = () => {
       {isAdminPermsVisible && (
   <>
     <TouchableOpacity style={styles.adminButton} onPress={handleViewUsers}>
-      <Text style={styles.adminButtonText}>View All Users</Text>
+      <Text style={styles.adminButtonText}>View & Edit Users</Text>
     </TouchableOpacity>
 
     <TouchableOpacity style={styles.adminButton} onPress={handleCreateUsers}>
