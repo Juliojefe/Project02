@@ -36,6 +36,10 @@ const LandingPage = () => {
     router.push(`/tierList?userID=${encodeURIComponent(userID)}`);
   };
 
+  const handlePastTierLists = () => {
+    router.push(`/pastTierLists?userID=${encodeURIComponent(userID)}`);
+  };
+
   const toggleAdminPermsVisibility = () => {
     setAdminPermsVisible(!isAdminPermsVisible);
   };
@@ -88,6 +92,10 @@ const LandingPage = () => {
 
       <TouchableOpacity style={styles.button} onPress={handleTierLists}>
         <Text style={styles.buttonText}>View Tier Lists</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.button} onPress={handlePastTierLists}>
+        <Text style={styles.buttonText}>View Past Tier Lists</Text>
       </TouchableOpacity>
 
       {isAdminPermsVisible && (
