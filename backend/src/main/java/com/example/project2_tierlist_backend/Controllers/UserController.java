@@ -125,6 +125,32 @@ public class UserController {
         }
     }
 
+    // Delete User on Admin Side (Deletes after entering Email)
+    @DeleteMapping("/admin/{id}")
+    public ResponseEntity<String> adminDeleteUser(@PathVariable Long id, @RequestBody Map<String, String> request) {
+        if (request == null || !request.containsKey("email") || request.get("email").isEmpty()) {
+            System.out.println("❌ [DELETE USER] No email provided!");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("❌ Email is required to delete account.");
+        }
+
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            String enteredEmail = request.get("email");
+
+            if (user.getEmail().equals(enteredEmail)) {
+                userRepository.deleteById(id);
+                System.out.println("✅ [DELETE USER] User deleted successfully!");
+                return ResponseEntity.ok("✅ User deleted successfully!");
+            } else {
+                System.out.println("❌ [DELETE USER] Incorrect email!");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("❌ Incorrect email.");
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("❌ User not found.");
+        }
+    }
+
     // Password reset
     @PostMapping("/forgot-password")
     public ResponseEntity<String> forgotPassword(@RequestBody Map<String, String> request) {

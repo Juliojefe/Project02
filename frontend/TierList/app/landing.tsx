@@ -47,12 +47,7 @@ const LandingPage = () => {
 
   const handleCreateUsers = () => {
     // should have popup or something to create users
-    alert("*Pressed button to create a new user*");
-  };
-
-  const handleDeleteUsers = () => {
-    // should have popup or something to delete specific user
-    alert("*Pressed button to delete a user*");
+    router.push(`/createAccount?userID=${encodeURIComponent(userID)}`);
   };
 
   const handleUpdateUsers = () => {
@@ -71,6 +66,7 @@ const LandingPage = () => {
     // should go back to home page
     router.dismissAll();
   };
+
 
   if (loading) {
     return (
@@ -100,10 +96,6 @@ const LandingPage = () => {
 
     <TouchableOpacity style={styles.adminButton} onPress={handleUpdateUsers}>
       <Text style={styles.adminButtonText}>Update a User's Account Details</Text>
-    </TouchableOpacity>
-
-    <TouchableOpacity style={styles.adminButton} onPress={handleDeleteUsers}>
-      <Text style={styles.adminButtonText}>Delete a User</Text>
     </TouchableOpacity>
   </>
 )}
