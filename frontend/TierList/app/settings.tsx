@@ -3,11 +3,6 @@ import { router, useLocalSearchParams } from "expo-router";
 
 const SettingsPage = () => {
   const { userID } = useLocalSearchParams();
-  
-  const handleLandingPage = () => {
-    // not very security safe since userID can be changed in link to view another user's account
-    router.push(`/landing?userID=${encodeURIComponent(userID)}`);
-  };
 
   const handleAccountDetails = () => {
     // could do popup to change specific details or onChangeText in settings page and confirm button to update changes
@@ -15,17 +10,11 @@ const SettingsPage = () => {
   };
 
   const handleDeleteAccount = () => {
-    // would need confirmation from user before deleting with a popup or something
-    alert("*Pressed button to delete account*");
+    router.push(`/deleteAccount?userID=${encodeURIComponent(userID)}`);
   };
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.tempButton} onPress={handleLandingPage}>
-        <Text style={styles.tempButtonText}>
-          Temporary Back Button to Landing Page
-        </Text>
-      </TouchableOpacity>
 
       <TouchableOpacity style={styles.button} onPress={handleAccountDetails}>
         <Text style={styles.buttonText}>Change Account Details</Text>
@@ -69,7 +58,7 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   deleteAccountButton: {
-    backgroundColor: "#ff6700",
+    backgroundColor: "#ff0000",
     padding: 10,
     borderRadius: 10,
     marginTop: 10,

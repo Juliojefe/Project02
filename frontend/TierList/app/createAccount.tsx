@@ -5,19 +5,22 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  CheckBox
 } from "react-native";
 
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import axios from "axios";
 
-const SignupPage = () => {
+const CreateAccountPage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [signupError, setSignupError] = useState("");
+  const [createError, setCreateError] = useState("");
+  const { userID } = useLocalSearchParams();
 
   const [user, setUser] = useState({
     name: "",
     email: "",
     password: "",
+    isAdmin: false,
   });
 
   const handleChange = (name, value) => {
@@ -27,24 +30,27 @@ const SignupPage = () => {
     }));
   };
 
-  const handleSignup = async () => {
-    // Checks to make sure that the user answered all 
+  const handleCreateAccount = async () => {
+    // Checks to make sure that the user answered all
     // the fields and passwords are matching
     if (!user.name || !user.email || !user.password) {
-      setSignupError("⚠️ Please enter your name, email, and password.");
+      setCreateError("⚠️ Please enter a name, email, and password.");
       return;
     } else if (!confirmPassword) {
-      setSignupError("⚠️ Please re-enter your password.")
+      setCreateError("⚠️ Please re-enter your password.");
       return;
     } else if (user.password != confirmPassword) {
-      setSignupError("⚠️ Your passwords don't match.");
+      setCreateError("⚠️ The passwords don't match.");
       return;
-    } else if ((user.password).length < 6 || !(user.password).match(/\W/)) { // Password Rules
-      setSignupError("⚠️ Your password must be at least 6 characters and have 1 special character.");
+    } else if (user.password.length < 6 || !user.password.match(/\W/)) {
+      // Password Rules
+      setCreateError(
+        "⚠️ The password must be at least 6 characters and have 1 special character."
+      );
       return;
     }
 
-    // Checks to create the user and will be routed to login page if account creation is successful
+    // Checks to create the user and admin will be routed to landing page if account creation is successful
     try {
       const response = await axios.post(
         "http://localhost:8080/users/register",
@@ -52,34 +58,44 @@ const SignupPage = () => {
           name: user.name,
           email: user.email,
           password: user.password,
+          isAdmin: user.isAdmin,
         }
       );
-      if (response.status === 200 && response.data === "✅ User registered successfully!") {
-        router.push("/login");
+      if (
+        response.status === 200 &&
+        response.data === "✅ User registered successfully!"
+      ) {
+        router.push(`/landing?userID=${encodeURIComponent(userID)}`);
       }
     } catch (error) {
       if (error.response) {
-        setSignupError(`${error.response.data}`);
-        console.log("Error registering user (server response): ", error.response.data);
-    } else if (error.request) {
-        setSignupError("Error: No response from server");
-        console.log("Error registering user (no server response): ", error.request);
-    } else {
-        setSignupError("Error: An unexpected error occurred");
+        setCreateError(`${error.response.data}`);
+        console.log(
+          "Error registering user (server response): ",
+          error.response.data
+        );
+      } else if (error.request) {
+        setCreateError("Error: No response from server");
+        console.log(
+          "Error registering user (no server response): ",
+          error.request
+        );
+      } else {
+        setCreateError("Error: An unexpected error occurred");
         console.log("Error registering user (unexpected): ", error.message);
-    }
+      }
     }
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.heading}>Greetings, let's get you situated.</Text>
+        <Text style={styles.heading}>Create an Account</Text>
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Name</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter your Name"
+            placeholder="Enter Name"
             value={user.name}
             onChangeText={(text) => handleChange("name", text)}
           />
@@ -88,7 +104,7 @@ const SignupPage = () => {
           <Text style={styles.label}>Email</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter your Email"
+            placeholder="Enter Email"
             value={user.email}
             onChangeText={(text) => handleChange("email", text)}
           />
@@ -97,7 +113,7 @@ const SignupPage = () => {
           <Text style={styles.label}>Password</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter your password"
+            placeholder="Enter password"
             secureTextEntry
             value={user.password}
             onChangeText={(text) => handleChange("password", text)}
@@ -107,15 +123,25 @@ const SignupPage = () => {
           <Text style={styles.label}>Confirm Password</Text>
           <TextInput
             style={styles.input}
-            placeholder="Re-enter your password"
+            placeholder="Re-enter password"
             secureTextEntry
             value={confirmPassword}
             onChangeText={setConfirmPassword}
           />
         </View>
-        <Text style={styles.errorText}>{signupError}</Text>
-        <TouchableOpacity style={styles.button} onPress={handleSignup}>
-          <Text style={styles.buttonText}>Sign up</Text>
+        <View style={styles.checkboxContainer}>
+          <Text style={styles.label}>
+            {`Admin User?    `}
+          </Text>
+          <CheckBox
+            value={user.isAdmin}
+            onValueChange={(boolean) => handleChange("isAdmin", boolean)}
+            style={styles.checkbox}
+          />
+        </View>
+        <Text style={styles.errorText}>{createError}</Text>
+        <TouchableOpacity style={styles.button} onPress={handleCreateAccount}>
+          <Text style={styles.buttonText}>Create Account</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -178,6 +204,17 @@ const styles = StyleSheet.create({
     color: "red",
     fontSize: 16,
   },
+  checkboxContainer: {
+    flexDirection: "row",
+    marginBottom: 20,
+    alignItems: "center",
+  },
+  checkbox: {
+    alignSelf: "center",
+  },
+  checkBoxLabel: {
+    margin: 8,
+  },
 });
 
-export default SignupPage;
+export default CreateAccountPage;
