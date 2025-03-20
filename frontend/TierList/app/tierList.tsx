@@ -24,7 +24,7 @@ const getTierColor = (tierName) => {
 };
 
 const TierList = () => {
-  const { userID } = useLocalSearchParams();
+  const { userID, subjectId } = useLocalSearchParams();
   const [tierAssignments, setTierAssignments] = useState({});
   const [tierItems, setTierItems] = useState([]);
   const [ranks, setRanks] = useState([]);
@@ -36,7 +36,7 @@ const TierList = () => {
   useEffect(() => {
     const fetchTierItems = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/api/tieritems/subject/17');
+        const response = await axios.get(`http://localhost:8080/api/tieritems/subject/${subjectId}`);
         setTierItems(response.data);
       } catch (error) {
         console.error('Error fetching tier items:', error);
