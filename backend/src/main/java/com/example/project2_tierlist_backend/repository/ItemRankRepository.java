@@ -6,18 +6,16 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface ItemRankRepository extends JpaRepository<ItemRank, Integer> {
 
-    Optional<ItemRank> findByName(String name);
+    ItemRank findByName(String name);
 
     List<ItemRank> findByNameContaining(String substring);
 
     List<ItemRank> findByNameContainingIgnoreCase(String substring);
 
     List<ItemRank> findByNameStartingWith(String prefix);
-
 
     @Query("SELECT r FROM ItemRank r WHERE LOWER(r.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<ItemRank> searchByName(@Param("keyword") String keyword);

@@ -22,4 +22,8 @@ public class SubjectService {
             return subjectRepository.save(newSubject);
         }
     }
+
+    public Subject getSubjectById(Long subjectId) {
+        return subjectRepository.findById(subjectId).orElse(null);
+    }
 }

@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/itemranks")  // Base URL
+@RequestMapping("/api/itemranks")
 public class ItemRankController {
 
     private final ItemRankRepository itemRankRepository;
@@ -21,7 +21,9 @@ public class ItemRankController {
 
     @GetMapping
     public List<ItemRank> getAllItemRanks() {
-        return itemRankRepository.findAll();
+        List<ItemRank> ranks = itemRankRepository.findAll();
+        System.out.println("Fetched ranks: " + ranks);
+        return ranks;
     }
 
     // 2. Get ItemRank by ID

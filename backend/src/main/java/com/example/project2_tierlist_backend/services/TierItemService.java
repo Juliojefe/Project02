@@ -22,18 +22,15 @@ public class TierItemService {
     private static TierItemRepository tierItemRepository;
 
     public static void populateItemsForSubject(String subjectName, int numItems) {
-        // Get or create the subject
         Subject subject = subjectService.getOrCreateSubject(subjectName);
-
-        // Fetch items from SerpAPI
         List<TierItem> items = serpApiService.fetchItems(subjectName, numItems);
-
-        // Set the subjectId for each item
         for (TierItem item : items) {
             item.setSubjectId(subject.getSubjectId());
         }
-
-        // Save the items to the database
         tierItemRepository.saveAll(items);
+    }
+
+    public TierItem getTierItemByNameAndSubject(String name, Long subjectId) {
+        return tierItemRepository.findByNameAndSubjectId(name, subjectId);
     }
 }

@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface TierListItemRepository extends JpaRepository<TierListItem, Long> {
     List<TierListItem> findByTierlistId(Long tierlistId);
+    void deleteByTierlistId(Long tierlistId);
 }
