@@ -44,19 +44,14 @@ const LandingPage = () => {
     setAdminPermsVisible(!isAdminPermsVisible);
   };
 
+  // Viewing all users created
   const handleViewUsers = () => {
-    // should go to page of a list of all users (normal users shouldn't be able to get there)
-    alert("*Pressed button to view all users*");
+    router.push(`/viewUsers?userID=${encodeURIComponent(userID)}`);
   };
 
   const handleCreateUsers = () => {
     // should have popup or something to create users
-    alert("*Pressed button to create a new user*");
-  };
-
-  const handleDeleteUsers = () => {
-    // should have popup or something to delete specific user
-    alert("*Pressed button to delete a user*");
+    router.push(`/createAccount?userID=${encodeURIComponent(userID)}`);
   };
 
   const handleUpdateUsers = () => {
@@ -71,12 +66,11 @@ const LandingPage = () => {
   };
 
   // Logout Functionality
-  // minor issue of user being able to go back to logged in 
-  // account if they back out with logging out
   const handleLogout = () => {
     // should go back to home page
-    router.replace("/");
+    router.dismissAll();
   };
+
 
   if (loading) {
     return (
@@ -101,7 +95,7 @@ const LandingPage = () => {
       {isAdminPermsVisible && (
   <>
     <TouchableOpacity style={styles.adminButton} onPress={handleViewUsers}>
-      <Text style={styles.adminButtonText}>View All Users</Text>
+      <Text style={styles.adminButtonText}>View & Edit Users</Text>
     </TouchableOpacity>
 
     <TouchableOpacity style={styles.adminButton} onPress={handleCreateUsers}>
@@ -110,10 +104,6 @@ const LandingPage = () => {
 
     <TouchableOpacity style={styles.adminButton} onPress={handleUpdateUsers}>
       <Text style={styles.adminButtonText}>Update a User's Account Details</Text>
-    </TouchableOpacity>
-
-    <TouchableOpacity style={styles.adminButton} onPress={handleDeleteUsers}>
-      <Text style={styles.adminButtonText}>Delete a User</Text>
     </TouchableOpacity>
   </>
 )}
