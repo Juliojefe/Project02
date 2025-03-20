@@ -26,16 +26,29 @@ public class Subject {
         createdAt = Instant.now();
     }
 
+    @Column(nullable = false)
+    private boolean hasBeenUsed;
+
     public Subject(){
         name = "no defined subject";
         isCurrent = false;
+        this.hasBeenUsed = false;
         onCreate();
     }
 
     public Subject(String name) {
         this.name = name;
         isCurrent = false;
+        this.hasBeenUsed = false;
         onCreate();
+    }
+
+    public boolean getIsCurrent() {
+        return this.isCurrent;
+    }
+
+    public void setIsCurrent(boolean isCurrent) {
+        this.isCurrent = isCurrent;
     }
 
     public Long getSubjectId() {
@@ -64,5 +77,13 @@ public class Subject {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public boolean isHasBeenUsed() {
+        return hasBeenUsed;
+    }
+
+    public void setHasBeenUsed(boolean hasBeenUsed) {
+        this.hasBeenUsed = hasBeenUsed;
     }
 }

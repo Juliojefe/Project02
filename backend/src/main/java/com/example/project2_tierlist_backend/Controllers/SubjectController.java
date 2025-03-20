@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/subjects")
+@RequestMapping("/api/subjects")
 public class SubjectController {
 
     private final SubjectRepository subjectRepository;
@@ -38,6 +38,7 @@ public class SubjectController {
     // create a new subject
     @PostMapping
     public ResponseEntity<Subject> createSubject(@RequestBody Subject subject) {
+        subject.setHasBeenUsed(false);
         Subject savedSubject = subjectRepository.save(subject);
         return new ResponseEntity<>(savedSubject, HttpStatus.CREATED);
     }
@@ -45,7 +46,6 @@ public class SubjectController {
     // update a subject by ID
     @PutMapping("/{id}")
     public ResponseEntity<Subject> updateSubject(@PathVariable Long id, @RequestBody Subject updatedSubject) {
-        //Optional<Subject> existingSubject = Optional.ofNullable(subjectRepository.findById(id));
         Optional<Subject> existingSubject = subjectRepository.findById(id);
 
         if (existingSubject.isPresent()) {
@@ -63,7 +63,6 @@ public class SubjectController {
     // delete a subject by ID
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSubject(@PathVariable Long id) {
-        //Optional<Subject> subject = Optional.ofNullable(subjectRepository.findById(id));
         Optional<Subject> subject = subjectRepository.findById(id);
         if (subject.isPresent()) {
             subjectRepository.delete(subject.get());
@@ -71,5 +70,10 @@ public class SubjectController {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping("/current")
+    public List<Subject> getCurrentSubjects() {
+        return subjectRepository.findByIsCurrentTrue();
     }
 }

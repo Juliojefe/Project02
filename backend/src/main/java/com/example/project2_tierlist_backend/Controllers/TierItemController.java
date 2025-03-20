@@ -66,4 +66,9 @@ public class TierItemController {
         return "Items populated for subject: " + subject;
     }
 
+    @GetMapping("/subject/{subjectId}")
+    public List<TierItem> getTierItemsBySubjectId(@PathVariable Long subjectId) {
+        return tierItemRepository.findBySubjectId(subjectId);
+    }
+
 }

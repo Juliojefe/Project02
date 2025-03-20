@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/tierlist_items")
-@CrossOrigin(origins = "http://localhost:8081")
+@RequestMapping("/api/tierlist_items")
+//@CrossOrigin(origins = "http://localhost:8081")
 public class TierListItemController {
 
     @Autowired
@@ -36,5 +36,10 @@ public class TierListItemController {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping
+    public List<TierListItem> getAllTierListItems() {
+        return tierListItemRepository.findAll();
     }
 }
