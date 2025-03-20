@@ -7,6 +7,7 @@ const SettingsPage = () => {
   const handleAccountDetails = () => {
     // could do popup to change specific details or onChangeText in settings page and confirm button to update changes
     alert("*Pressed button to change certain account details*");
+    // router.push(`/editUser?userID=${encodeURIComponent(userID)}`);
   };
 
   const handleDeleteAccount = () => {
