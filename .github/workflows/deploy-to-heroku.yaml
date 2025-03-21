@@ -6,7 +6,7 @@ on:
       - master
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -16,7 +16,7 @@ jobs:
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '21'
 
       - name: Cache Gradle packages
@@ -25,18 +25,16 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-${{ hashFiles('backend/**/*.gradle*', 'backend/gradle/wrapper/gradle-wrapper.properties') }}
 
-      - name: Build with Gradle
-        run: ./gradlew build -x check
+      - name: Build backend
+        working-directory: backend
+        run: ./gradlew clean bootJar -x check
 
       - name: Deploy to Heroku
-        env:
-          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-          HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
-          PROJECT_PATH: .
-        run: |
-          wget -qO- https://cli-assets.heroku.com/install-ubuntu.sh | sh
-          heroku plugins:install heroku-repo
-          heroku repo:purge_cache -a $HEROKU_APP_NAME
-          git push https://heroku:$HEROKU_API_KEY@git.heroku.com/$HEROKU_APP_NAME.git HEAD:master --force
+        uses: akhileshns/heroku-deploy@v3.12.12
+        with:
+          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
+          heroku_app_name: ${{ secrets.HEROKU_APP_NAME }}
+          heroku_email: ${{ secrets.HEROKU_EMAIL }}
+          jarfile: backend/build/libs/project2_tierlist_backend-0.0.1-SNAPSHOT.jar
