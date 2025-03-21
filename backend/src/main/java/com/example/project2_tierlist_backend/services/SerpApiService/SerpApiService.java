@@ -20,16 +20,17 @@ public class SerpApiService {
     private RestTemplate restTemplate;
 
     public List<TierItem> fetchItems(String subject, int numItems) {
-        String url = "https://serpapi.com/search?engine=google&q=" + subject + "&num=30&api_key=" + apiKey;
+        String url = "https://serpapi.com/search?engine=google_shopping&q=" + subject
+                + "&tbm=shop&num=30&api_key=" + apiKey;
         try {
-            ResponseEntity<SerpApiResponse> response = restTemplate.getForEntity(url, SerpApiResponse.class);
-            SerpApiResponse data = response.getBody();
-            if (data == null || data.getOrganicResults() == null) {
+            ResponseEntity<ShoppingApiResponse> response = restTemplate.getForEntity(url, ShoppingApiResponse.class);
+            ShoppingApiResponse data = response.getBody();
+            if (data == null || data.getShoppingResults() == null) {
                 return new ArrayList<>();
             }
             List<TierItem> items = new ArrayList<>();
             // collect only the first 6 valid items from the 30 fetched
-            for (OrganicResult result : data.getOrganicResults()) {
+            for (ShoppingResult result : data.getShoppingResults()) {
                 if (result.getTitle() != null && result.getThumbnail() != null) {
                     items.add(new TierItem(result.getTitle(), result.getThumbnail()));
                 }

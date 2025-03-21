@@ -18,16 +18,11 @@ public class SecurityConfig {
         http
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/oauth2/**", "/auth/**", "/users/**", "/users/register", "/users/login",
-                                "/users/forgot-password", "/users/update-password", "/api/**").permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 )
-                .oauth2Login(oauth2 -> oauth2
-                        .defaultSuccessUrl("/auth/login/success", true) // Redirect after login
-                )
-                .logout(logout -> logout.logoutSuccessUrl("/")) // Logout URL
-                .csrf(csrf -> csrf.disable());
-
+                .csrf(csrf -> csrf.disable())
+                .oauth2Login(oauth2 -> oauth2.defaultSuccessUrl("/auth/login/success", true))
+                .logout(logout -> logout.logoutSuccessUrl("/")); // Logout URL
         return http.build();
     }
 
