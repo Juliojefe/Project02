@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+
 
 import java.util.List;
 
@@ -19,6 +21,9 @@ public class AdminController {
 
     @Autowired
     private SubjectInitializer subjectInitializer;
+
+    @Autowired
+    private SubjectRepository subjectRepository;
 
     // Manually trigger the scheduler to refresh subjects and repopulate TierItems.
     // curl -X POST "http://localhost:8080/admin/trigger-scheduler
