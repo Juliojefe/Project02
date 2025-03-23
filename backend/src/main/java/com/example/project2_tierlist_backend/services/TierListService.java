@@ -80,7 +80,7 @@ public class TierListService {
                 .orElse("Untitled");
         String tierListName = "Tier List for " + subjectName;
 
-        TierList existingTierList = tierListRepository.findByUserIdAndSubjectId(userId, subjectId);
+        TierList existingTierList = tierListRepository.findByUserIdAndSubjectId(userId.intValue(), subjectId);
         if (existingTierList != null) {
             // Update existing tier list
             existingTierList.setName(tierListName); // Ensure name is updated

@@ -109,8 +109,8 @@ public class TierListController {
 
     @GetMapping("/user/{userId}/subject/{subjectId}")
     public ResponseEntity<TierListWithAssignments> getTierListByUserAndSubject(
-            @PathVariable Integer userId, @PathVariable Integer subjectId) {
-        TierList tierList = tierListRepository.findByUserIdAndSubjectId((long) userId, (long) subjectId);
+            @PathVariable Integer userId, @PathVariable Long subjectId) {
+        TierList tierList = tierListRepository.findByUserIdAndSubjectId(userId, subjectId);
         if (tierList != null) {
             List<TierListItem> assignments = tierListItemRepository.findByTierlistId((long) tierList.getTierlistId());
             TierListWithAssignments response = new TierListWithAssignments(tierList, assignments);
