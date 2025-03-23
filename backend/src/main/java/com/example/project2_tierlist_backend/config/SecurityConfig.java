@@ -12,14 +12,13 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/oauth2/**", "/auth/**", "/users/**", "/users/register", "/users/login",
-                                "/users/forgot-password", "/users/update-password", "/api/**").permitAll()
+                                "/users/forgot-password", "/users/update-password", "/api/**", "/tierlists/**", "/api/tierlists/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
