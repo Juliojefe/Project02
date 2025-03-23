@@ -38,6 +38,7 @@ const SettingsPage = () => {
         response.data === "✅ User deleted successfully!"
       ) {
         router.dismissAll();
+        router.replace("/");
       }
     } catch (error) {
       if (error.response) {

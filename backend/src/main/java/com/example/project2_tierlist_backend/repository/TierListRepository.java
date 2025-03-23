@@ -7,4 +7,5 @@ import java.util.List;
 public interface TierListRepository extends JpaRepository<TierList, Integer> {
     List<TierList> findByUserId(Integer userId);
     TierList findByUserIdAndSubjectId(Long userId, Long subjectId);
+    TierList findbyId(Integer tierlistId);
 }

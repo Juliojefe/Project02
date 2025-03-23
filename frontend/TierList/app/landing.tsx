@@ -33,7 +33,7 @@ const LandingPage = () => {
   // Viewing Tier lists
   // currently goes to creating a tier list
   const handleTierLists = () => {
-    router.push(`/tierList?userID=${encodeURIComponent(userID)}`);
+    router.push(`/viewCurrentSubjects?userID=${encodeURIComponent(userID)}`);
   };
 
   const handlePastTierLists = () => {
@@ -69,6 +69,7 @@ const LandingPage = () => {
   const handleLogout = () => {
     // should go back to home page
     router.dismissAll();
+    router.replace("/");
   };
 
 

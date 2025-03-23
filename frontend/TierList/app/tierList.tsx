@@ -24,7 +24,7 @@ const getTierColor = (tierName) => {
 };
 
 const TierList = () => {
-  const { userID } = useLocalSearchParams();
+  const { userID, subjectId } = useLocalSearchParams();
   const [tierAssignments, setTierAssignments] = useState({});
   const [tierItems, setTierItems] = useState([]);
   const [ranks, setRanks] = useState([]);
@@ -32,35 +32,63 @@ const TierList = () => {
   const [submissionString, setSubmissionString] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [tierlistId, setTierlistId] = useState(null);
+  const [subjectName, setSubjectName] = useState('');
 
   useEffect(() => {
-    const fetchTierItems = async () => {
-      try {
-        const response = await axios.get('http://localhost:8080/api/tieritems/subject/17');
-        setTierItems(response.data);
-      } catch (error) {
-        console.error('Error fetching tier items:', error);
-        setMessage('Failed to load tier items');
-      }
-    };
-
-    const fetchRanks = async () => {
-      try {
-        const response = await axios.get('http://localhost:8080/api/itemranks');
-        setRanks(response.data);
-      } catch (error) {
-        console.error('Error fetching ranks:', error);
-        setMessage('Failed to load ranks');
-      }
-    };
-
     const loadData = async () => {
-      await Promise.all([fetchTierItems(), fetchRanks()]);
-      setLoading(false);
+      try {
+        const [tierItemsRes, ranksRes, subjectRes] = await Promise.all([
+          axios.get(`http://localhost:8080/api/tieritems/subject/${subjectId}`),
+          axios.get(`http://localhost:8080/api/itemranks`),
+          axios.get(`http://localhost:8080/api/subjects/${subjectId}`),
+        ]);
+
+        setTierItems(tierItemsRes.data);
+        setRanks(ranksRes.data);
+        setSubjectName(subjectRes.data.name);
+
+        // Check for existing tier list
+        let existingTierList = null;
+        try {
+          const existingTierListRes = await axios.get(
+            `http://localhost:8080/api/tierlists/user/${userID}/subject/${subjectId}`
+          );
+          existingTierList = existingTierListRes.data;
+        } catch (error) {
+          if (error.response && error.response.status === 404) {
+            // No existing tier list found, proceed with empty assignments
+          } else {
+            console.error('Error fetching existing tier list:', error);
+            setMessage('Failed to load existing tier list');
+          }
+        }
+
+        if (existingTierList) {
+          const assignments = {};
+          existingTierList.assignments.forEach((assignment) => {
+            const rank = ranksRes.data.find((r) => r.rankId === assignment.rankId);
+            const item = tierItemsRes.data.find((i) => i.itemId === assignment.itemId);
+            if (rank && item) {
+              assignments[rank.name] = item.name;
+            }
+          });
+          setTierAssignments(assignments);
+          setTierlistId(existingTierList.tierList.tierlistId);
+        } else {
+          setTierAssignments({});
+          setTierlistId(null);
+        }
+      } catch (error) {
+        console.error('Error loading data:', error);
+        setMessage('Failed to load data');
+      } finally {
+        setLoading(false);
+      }
     };
 
     loadData();
-  }, []);
+  }, [userID, subjectId]);
 
   const availableItems = tierItems.filter(
     (item) => !Object.values(tierAssignments).includes(item.name)
@@ -114,8 +142,7 @@ const TierList = () => {
     setMessage('Submitting...');
 
     try {
-      const subjectId = 17;
-      const tierListName = "My Tier List";
+      const tierListName = "My Tier List"; // Can be made dynamic if needed
 
       const itemMap = tierItems.reduce((acc, item) => {
         acc[item.name] = item.itemId;
@@ -139,18 +166,28 @@ const TierList = () => {
 
       const payload = {
         userId: userIdNum,
-        subjectId,
+        subjectId: parseInt(subjectId, 10),
         name: tierListName,
         assignments,
       };
 
-      console.log('Submitting payload:', payload);
-
-      const response = await axios.post(
-        'http://localhost:8080/api/tierlists',
-        payload,
-        { headers: { 'Content-Type': 'application/json' } }
-      );
+      let response;
+      if (tierlistId) {
+        // Update existing tier list with PUT request
+        response = await axios.put(
+          `http://localhost:8080/api/tierlists/${tierlistId}`,
+          payload,
+          { headers: { 'Content-Type': 'application/json' } }
+        );
+      } else {
+        // Create new tier list with POST request
+        response = await axios.post(
+          'http://localhost:8080/api/tierlists',
+          payload,
+          { headers: { 'Content-Type': 'application/json' } }
+        );
+        setTierlistId(response.data.tierlistId); // Store the new tierlistId
+      }
 
       setMessage('Submission successful');
       let formattedString = '';
@@ -161,7 +198,6 @@ const TierList = () => {
     } catch (error) {
       console.error('Error submitting tier list:', error);
       if (error.response) {
-        console.log('Backend error response:', error.response.data);
         setMessage(`Submission failed: ${error.response.data.message || error.response.statusText}`);
       } else if (error.request) {
         setMessage('Submission failed: No response from server');
@@ -276,6 +312,9 @@ const TierList = () => {
             backgroundColor: '#f0f0f0',
           }}
         >
+          <div style={{ textAlign: 'center', fontWeight: 'bold', color: 'black', padding: '5px' }}>
+            {subjectName}
+          </div>
           <div
             style={{
               display: 'flex',

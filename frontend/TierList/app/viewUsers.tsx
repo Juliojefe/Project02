@@ -1,8 +1,21 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+} from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import {
+  Menu,
+  MenuOptions,
+  MenuOption,
+  MenuTrigger,
+  MenuProvider,
+} from "react-native-popup-menu";
 
 const ViewUsersPage = () => {
   const { userID } = useLocalSearchParams();
@@ -25,11 +38,12 @@ const ViewUsersPage = () => {
     }
   };
 
-  const handleEditAccount = async () => { 
-    alert("Pressed button to edit account")
+  const handleEditAccount = async () => {
+    alert("Pressed button to edit account");
   };
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = ({ id }) => {
+    // need to figure out how to pass item that was selected of being deleted
     router.push(`/adminDeleteAccount?userID=${encodeURIComponent(userID)}`);
   };
 
@@ -61,66 +75,89 @@ const ViewUsersPage = () => {
 
   const renderAdminItem = ({ item }) => (
     <View style={styles.userBox}>
-      <Text style={styles.adminItem}>
-        <Text style={styles.type}>ID:</Text> {item.id}
-      </Text>
+      <View style={styles.userItemHeader}>
+        <Text style={styles.type}>User ID: #{item.id}</Text>
+        <Menu>
+        <MenuTrigger>
+          <Text style={styles.menuTrigger}>⋮</Text>
+        </MenuTrigger>
+        <MenuOptions>
+          <MenuOption onSelect={() => handleEditAccount(item.id)}>
+            <Text style={styles.menuOption}>Edit</Text>
+          </MenuOption>
+          <MenuOption onSelect={() => handleDeleteAccount(item.id)}>
+            <Text style={styles.menuOption}>Delete</Text>
+          </MenuOption>
+        </MenuOptions>
+      </Menu>
+      </View>
       <Text style={styles.adminItem}>
         <Text style={styles.type}>Name:</Text> {item.name}
       </Text>
       <Text style={styles.adminItem}>
         <Text style={styles.type}>Email:</Text> {item.email}
       </Text>
-      <TouchableOpacity style={styles.button} onPress={handleEditAccount}>
-          <Text style={styles.buttonText}>Edit Account</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={handleDeleteAccount}>
-          <Text style={styles.buttonText}>Delete Account</Text>
-        </TouchableOpacity>
+      {/* <TouchableOpacity style={styles.button} onPress={handleEditAccount}>
+        <Text style={styles.buttonText}>Edit Account</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={handleDeleteAccount}>
+        <Text style={styles.buttonText}>Delete Account</Text>
+      </TouchableOpacity> */}
+      {/* Menu for each list item */}
     </View>
   );
 
   const renderNormalItem = ({ item }) => (
     <View style={styles.userBox}>
-      <Text>
-        <Text style={styles.type}>ID:</Text> {item.id}
-      </Text>
+    <View style={styles.userItemHeader}>
+        <Text style={styles.type}>User ID: #{item.id}</Text>
+        <Menu>
+        <MenuTrigger>
+          <Text style={styles.menuTrigger}>⋮</Text>
+        </MenuTrigger>
+        <MenuOptions>
+          <MenuOption onSelect={() => alert(`Selected: Edit ${item.name}`)}>
+            <Text style={styles.menuOption}>Edit</Text>
+          </MenuOption>
+          <MenuOption onSelect={() => handleDeleteAccount(item.id)}>
+            <Text style={styles.menuOption}>Delete</Text>
+          </MenuOption>
+        </MenuOptions>
+      </Menu>
+      </View>
       <Text>
         <Text style={styles.type}>Name:</Text> {item.name}
       </Text>
       <Text>
         <Text style={styles.type}>Email:</Text> {item.email}
       </Text>
-      <TouchableOpacity style={styles.button} onPress={handleEditAccount}>
-          <Text style={styles.buttonText}>Edit Account</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={handleDeleteAccount}>
-          <Text style={styles.buttonText}>Delete Account</Text>
-        </TouchableOpacity>
     </View>
   );
 
   return (
-    <SafeAreaProvider>
-      <SafeAreaView style={styles.container}>
-        <View style={styles.listContainer}>
-          <Text style={styles.adminSectionTitle}>Admin Users</Text>
-          <FlatList
-            data={adminUsers}
-            renderItem={renderAdminItem}
-            keyExtractor={(item) => item.id.toString()}
-          />
+    <MenuProvider>
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.container}>
+          <View style={styles.listContainer}>
+            <Text style={styles.adminSectionTitle}>Admin Users</Text>
+            <FlatList
+              data={adminUsers}
+              renderItem={renderAdminItem}
+              keyExtractor={(item) => item.id.toString()}
+            />
 
-          <View style={styles.horizontalLine} />
+            <View style={styles.horizontalLine} />
 
-          <Text style={styles.userSectionTitle}>Normal Users</Text>
-          <FlatList
-            data={normalUsers}
-            renderItem={renderNormalItem}
-            keyExtractor={(item) => item.id.toString()}
-          />
-        </View>
-      </SafeAreaView>
-    </SafeAreaProvider>
+            <Text style={styles.userSectionTitle}>Normal Users</Text>
+            <FlatList
+              data={normalUsers}
+              renderItem={renderNormalItem}
+              keyExtractor={(item) => item.id.toString()}
+            />
+          </View>
+        </SafeAreaView>
+      </SafeAreaProvider>
+    </MenuProvider>
   );
 };
 
@@ -151,7 +188,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 100,
     textAlign: "center",
-    
   },
   userSectionTitle: {
     fontSize: 25,
@@ -175,12 +211,20 @@ const styles = StyleSheet.create({
   adminItem: {
     color: "#27592D",
   },
-  kebabButton: {
-    padding: 5,
+  itemText: {
+    fontSize: 20,
   },
-  menu: {
-    position: "absolute",
-    right: 0,
+  userItemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  menuTrigger: {
+    fontSize: 20,
+    color: 'gray',
+  },
+  menuOption: {
+    padding: 10,
+    fontSize: 16,
   },
   button: {
     padding: 12,
@@ -190,7 +234,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "white",
-    fontSize: 12,
+    fontSize: 20,
     fontWeight: "bold",
   },
   horizontalLine: {
