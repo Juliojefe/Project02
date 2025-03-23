@@ -12,7 +12,6 @@ import {
 import axios from "axios";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
-// Define the structure for a TierList object, adding subjectId
 interface TierList {
   tierlistId: number;
   name: string;
@@ -38,7 +37,6 @@ const rankColors: Record<string, string> = {
 };
 
 const PastTierLists = () => {
-  // Get the userID from the URL query parameters
   const { userID } = useLocalSearchParams<{ userID: string }>();
   const router = useRouter();
   const [tierLists, setTierLists] = useState<TierList[]>([]);
@@ -159,6 +157,14 @@ const PastTierLists = () => {
           >
             <Text style={styles.buttonText}>Edit</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+              style={styles.similarButton}
+              onPress={() =>
+                  router.push(`/similarTierLists?userID=${userID}&subjectId=${item.subjectId}`)
+              }
+          >
+            <Text style={styles.buttonText}>Similar Tier Lists</Text>
+          </TouchableOpacity>
         </View>
       </View>
   );
@@ -267,6 +273,12 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 6,
     marginLeft: 10,
+  },
+  similarButton: {
+    backgroundColor: "#007bff",
+    padding: 10,
+    borderRadius: 6,
+    marginLeft: "auto",
   },
   buttonText: {
     color: "#fff",
