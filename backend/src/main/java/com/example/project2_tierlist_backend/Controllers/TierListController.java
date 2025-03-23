@@ -9,6 +9,7 @@ import com.example.project2_tierlist_backend.models.TierList;
 import com.example.project2_tierlist_backend.models.TierListItem;
 import com.example.project2_tierlist_backend.repository.*;
 import com.example.project2_tierlist_backend.services.TierListService;
+import com.example.project2_tierlist_backend.dto.SimilarTierListDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -150,5 +151,15 @@ public class TierListController {
         // Save the updated tier list
         tierListRepository.save(existing);
         return ResponseEntity.ok(existing);
+    }
+
+    // retrieves tier lists similar to a given user's tier list
+    @GetMapping("/{userId}/subject/{subjectId}/similar")
+    public List<SimilarTierListDTO> getSimilarTierLists(
+            @PathVariable Integer userId,
+            @PathVariable Long subjectId,
+            @RequestParam(name = "minSimilarity", defaultValue = "0") int minSimilarity
+    ) {
+        return tierListService.getSimilarLists(userId, subjectId, minSimilarity);
     }
 }

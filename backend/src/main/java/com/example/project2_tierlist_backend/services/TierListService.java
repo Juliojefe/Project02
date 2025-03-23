@@ -3,9 +3,15 @@ package com.example.project2_tierlist_backend.services;
 import com.example.project2_tierlist_backend.dto.TierListRequest;
 import com.example.project2_tierlist_backend.models.*;
 import com.example.project2_tierlist_backend.repository.*;
+import com.example.project2_tierlist_backend.dto.SimilarTierListDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.Collections;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class TierListService {
@@ -126,5 +132,49 @@ public class TierListService {
             }
             return newTierList;
         }
+    }
+
+    public List<SimilarTierListDTO> getSimilarLists(
+            Integer userId, Long subjectId, int minSimilarity
+    ) {
+        // Find the current user’s TierList for this subject
+        TierList userTierList = tierListRepository.findByUserIdAndSubjectId(userId, subjectId);
+        if (userTierList == null) {
+            return Collections.emptyList();
+        }
+
+        // Convert that TierList’s items into a quick lookup
+        List<TierListItem> userItems =
+                tierListItemRepository.findByTierlistId(userTierList.getTierlistId().longValue());
+        Map<Long, Long> userMap = userItems.stream()
+                .collect(Collectors.toMap(TierListItem::getItemId, TierListItem::getRankId));
+
+        List<TierList> allLists = tierListRepository.findBySubjectId(subjectId);
+
+        List<SimilarTierListDTO> results = new ArrayList<>();
+
+        // Calculate similarity for each
+        for (TierList other : allLists) {
+            if (Objects.equals(other.getTierlistId(), userTierList.getTierlistId())) {
+                continue;
+            }
+
+            // Compare item rank matches
+            List<TierListItem> otherItems =
+                    tierListItemRepository.findByTierlistId(other.getTierlistId().longValue());
+            int matches = 0;
+            for (TierListItem item : otherItems) {
+                Long userRank = userMap.get(item.getItemId());
+                if (userRank != null && Objects.equals(userRank, item.getRankId())) {
+                    matches++;
+                }
+            }
+
+            int similarity = (int) Math.round(100.0 * matches / userMap.size());
+            if (similarity >= minSimilarity) {
+                results.add(new SimilarTierListDTO(other, similarity));
+            }
+        }
+        return results;
     }
 }
