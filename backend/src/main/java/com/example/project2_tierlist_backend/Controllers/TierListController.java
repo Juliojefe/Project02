@@ -1,5 +1,6 @@
 package com.example.project2_tierlist_backend.Controllers;
 
+import com.example.project2_tierlist_backend.dto.TierListCreationRequest;
 import com.example.project2_tierlist_backend.dto.TierListRequest;
 import com.example.project2_tierlist_backend.dto.TierListWithAssignments;
 import com.example.project2_tierlist_backend.models.Subject;
@@ -13,8 +14,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/tierlists")
@@ -34,6 +40,9 @@ public class TierListController {
 
     @Autowired
     private TierItemRepository tierItemRepository;
+
+    private static final Logger logger = LoggerFactory.getLogger(TierListController.class);
+
 
     public TierListController(TierListRepository tierListRepository) {
         this.tierListRepository = tierListRepository;
@@ -123,5 +132,23 @@ public class TierListController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
         }
+    }
+
+    @PutMapping("/{tierlistId}")
+    public ResponseEntity<TierList> updateTierList(@PathVariable Integer tierlistId, @RequestBody TierListCreationRequest request) {
+        // Find the existing tier list
+        TierList existing = tierListRepository.findById(tierlistId)
+                .orElseThrow(() -> new RuntimeException("TierList not found"));
+        existing.setName(request.getName());
+        // Clear old assignments
+        tierListItemRepository.deleteByTierlistId((long) tierlistId);
+        // Add new assignments
+        List<TierListItem> newAssignments = request.getAssignments().stream()
+                .map(assignment -> new TierListItem(tierlistId.longValue(), assignment.getItemId().longValue(), assignment.getRankId().longValue()))
+                .collect(Collectors.toList());
+        tierListItemRepository.saveAll(newAssignments);
+        // Save the updated tier list
+        tierListRepository.save(existing);
+        return ResponseEntity.ok(existing);
     }
 }
