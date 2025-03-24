@@ -157,22 +157,6 @@ public class UserController {
             return ResponseEntity.ok("✅ User updated successfully!");
         }).orElseGet(() -> ResponseEntity.notFound().build());
     }
-    @PatchMapping("/{id}")
-    public ResponseEntity<?> patchUser(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
-        Optional<User> optionalUser = userRepository.findById(id);
-        if (!optionalUser.isPresent()) {
-            return ResponseEntity.notFound().build();
-        }
-        User user = optionalUser.get();
-        if (updates.containsKey("name")) {
-            user.setName((String) updates.get("name"));
-        }
-        if (updates.containsKey("image")) {
-            user.setImage((String) updates.get("image"));
-        }
-        userRepository.save(user);
-        return ResponseEntity.ok("✅ User patched successfully!");
-    }
 
     // Delete User
     @DeleteMapping("/{id}")
