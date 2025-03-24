@@ -289,7 +289,6 @@ const TierList = () => {
                       alt={tierAssignments[tier.name]}
                       style={{ width: '30px', height: '30px', objectFit: 'cover' }}
                     />
-                    <span>{tierAssignments[tier.name]}</span>
                   </div>
                 ) : (
                   ''
@@ -344,7 +343,6 @@ const TierList = () => {
                   alt={item.name}
                   style={{ width: '50px', height: '50px', objectFit: 'cover' }}
                 />
-                <span>{item.name}</span>
               </div>
             ))}
           </div>
