@@ -3,15 +3,15 @@ package com.example.project2_tierlist_backend.dto;
 import java.util.List;
 
 public class TierListRequest {
-    private Integer userId;
-    private Integer subjectId;
+    private Long userId;
+    private Long subjectId;
     private String name;
     private List<Assignment> assignments;
 
-    public Integer getUserId() { return userId; }
-    public void setUserId(Integer userId) { this.userId = userId; }
-    public Integer getSubjectId() { return subjectId; }
-    public void setSubjectId(Integer subjectId) { this.subjectId = subjectId; }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
+    public Long getSubjectId() { return subjectId; }
+    public void setSubjectId(Long subjectId) { this.subjectId = subjectId; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public List<Assignment> getAssignments() { return assignments; }

@@ -9,6 +9,7 @@ import com.example.project2_tierlist_backend.models.TierList;
 import com.example.project2_tierlist_backend.models.TierListItem;
 import com.example.project2_tierlist_backend.repository.*;
 import com.example.project2_tierlist_backend.services.TierListService;
+import jakarta.transaction.Transactional;
 import com.example.project2_tierlist_backend.dto.SimilarTierListDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.server.ResponseStatusException;
 
 
 import java.util.List;
@@ -58,7 +60,7 @@ public class TierListController {
     //get a tier list by ID
     @GetMapping("/{id}")
     public ResponseEntity<TierList> getTierListById(@PathVariable Integer id) {
-        Optional<TierList> tierList = tierListRepository.findById(id);
+        Optional<TierList> tierList = tierListRepository.findById(id.longValue());
         return tierList.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
@@ -75,6 +77,7 @@ public class TierListController {
         return tierListRepository.save(tierList);
     }
 
+/*
     // update a tier list
     @PutMapping("/{id}")
     public ResponseEntity<TierList> updateTierList(@PathVariable Integer id, @RequestBody TierList updatedTierList) {
@@ -87,12 +90,13 @@ public class TierListController {
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
+*/
 
     // delete a tier list
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTierList(@PathVariable Integer id) {
-        if (tierListRepository.existsById(id)) {
-            tierListRepository.deleteById(id);
+        if (tierListRepository.existsById(id.longValue())) {
+            tierListRepository.deleteById(id.longValue());
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
@@ -136,21 +140,27 @@ public class TierListController {
     }
 
     @PutMapping("/{tierlistId}")
-    public ResponseEntity<TierList> updateTierList(@PathVariable Integer tierlistId, @RequestBody TierListCreationRequest request) {
-        // Find the existing tier list
-        TierList existing = tierListRepository.findById(tierlistId)
-                .orElseThrow(() -> new RuntimeException("TierList not found"));
-        existing.setName(request.getName());
-        // Clear old assignments
-        tierListItemRepository.deleteByTierlistId((long) tierlistId);
-        // Add new assignments
-        List<TierListItem> newAssignments = request.getAssignments().stream()
-                .map(assignment -> new TierListItem(tierlistId.longValue(), assignment.getItemId().longValue(), assignment.getRankId().longValue()))
-                .collect(Collectors.toList());
-        tierListItemRepository.saveAll(newAssignments);
-        // Save the updated tier list
-        tierListRepository.save(existing);
-        return ResponseEntity.ok(existing);
+    @Transactional
+    public ResponseEntity<?> updateTierList(@PathVariable Long tierlistId, @RequestBody TierListRequest request) {
+        try {
+            Optional<TierList> optionalTierList = tierListRepository.findById(tierlistId);
+            if (!optionalTierList.isPresent()) {
+                return ResponseEntity.notFound().build();
+            }
+            TierList existing = optionalTierList.get();
+            existing.setName(request.getName());
+            tierListItemRepository.deleteByTierlistId(tierlistId);
+            List<TierListItem> newAssignments = request.getAssignments().stream()
+                    .map(assignment -> new TierListItem(tierlistId, assignment.getItemId().longValue(), assignment.getRankId().longValue()))
+                    .collect(Collectors.toList());
+            tierListItemRepository.saveAll(newAssignments);
+            tierListRepository.save(existing);
+            return ResponseEntity.ok(existing);
+        } catch (Exception e) {
+            logger.error("Error updating tier list with ID {}: {}", tierlistId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to update tier list: " + e.getMessage());
+        }
     }
 
     // retrieves tier lists similar to a given user's tier list
