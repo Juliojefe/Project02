@@ -3,15 +3,18 @@ import { router, useLocalSearchParams } from "expo-router";
 
 const SettingsPage = () => {
   const { userID } = useLocalSearchParams();
+  const userIdValue = Array.isArray(userID) ? userID[0] : userID;
 
   const handleAccountDetails = () => {
     // could do popup to change specific details or onChangeText in settings page and confirm button to update changes
-    alert("*Pressed button to change certain account details*");
-    // router.push(`/editUser?userID=${encodeURIComponent(userID)}`);
+    router.push(`/userEditAccount?userID=${encodeURIComponent(userIdValue)}`);
+
+
+    alert("*Pressed button to change certain account editing*");
   };
 
   const handleDeleteAccount = () => {
-    router.push(`/deleteAccount?userID=${encodeURIComponent(userID)}`);
+    router.push(`/deleteAccount?userID=${encodeURIComponent(userIdValue)}`);
   };
 
   return (
