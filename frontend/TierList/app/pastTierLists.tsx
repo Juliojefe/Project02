@@ -7,11 +7,11 @@ import {
   ActivityIndicator,
   Alert,
   TouchableOpacity,
+  Image,
 } from "react-native";
 import axios from "axios";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
-// Define the structure for a TierList object, adding subjectId
 interface TierList {
   tierlistId: number;
   name: string;
@@ -21,11 +21,26 @@ interface TierList {
   subjectId: number;
 }
 
+interface DisplayAssignment {
+  id: number;
+  rankName: string;
+  itemImage: string;
+}
+
+const rankColors: Record<string, string> = {
+  S: "#00FF00",
+  A: "#ADFF2F",
+  B: "#FFFF00",
+  C: "#FFA500",
+  D: "#FF6347",
+  F: "#FF0000",
+};
+
 const PastTierLists = () => {
-  // Get the userID from the URL query parameters
   const { userID } = useLocalSearchParams<{ userID: string }>();
   const router = useRouter();
   const [tierLists, setTierLists] = useState<TierList[]>([]);
+  const [assignmentsByList, setAssignmentsByList] = useState<Record<number, DisplayAssignment[]>>({});
   const [subjectNames, setSubjectNames] = useState<{ [key: number]: string }>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +52,7 @@ const PastTierLists = () => {
       setLoading(false);
       return;
     }
+
     try {
       console.log(`[PastTierLists] Fetching tier lists for userID=${userID}...`);
       const response = await axios.get(
@@ -47,8 +63,8 @@ const PastTierLists = () => {
 
       const subjectIds = response.data.map((tl: TierList) => tl.subjectId);
       const uniqueSubjectIds = [...new Set(subjectIds)];
-      const subjectPromises = uniqueSubjectIds.map((id: number) =>
-        axios.get(`http://localhost:8080/api/subjects/${id}`)
+      const subjectPromises = uniqueSubjectIds.map((id) =>
+          axios.get(`http://localhost:8080/api/subjects/${id}`)
       );
       const subjectsRes = await Promise.all(subjectPromises);
       const subjectMap: { [key: number]: string } = {};
@@ -56,6 +72,30 @@ const PastTierLists = () => {
         subjectMap[res.data.subjectId] = res.data.name;
       });
       setSubjectNames(subjectMap);
+
+      const map: Record<number, DisplayAssignment[]> = {};
+      await Promise.all(
+          response.data.map(async (tl: TierList) => {
+            const resp = await axios.get<any[]>(
+                `http://localhost:8080/api/tierlist_items/${tl.tierlistId}`
+            );
+            const display = await Promise.all(
+                resp.data.map(async (a) => {
+                  const [itemRes, rankRes] = await Promise.all([
+                    axios.get(`http://localhost:8080/api/tieritems/${a.itemId}`),
+                    axios.get(`http://localhost:8080/api/itemranks/${a.rankId}`),
+                  ]);
+                  return {
+                    id: a.id,
+                    rankName: rankRes.data.name,
+                    itemImage: itemRes.data.image,
+                  };
+                })
+            );
+            map[tl.tierlistId] = display;
+          })
+      );
+      setAssignmentsByList(map);
     } catch (err) {
       console.error("[PastTierLists] Request error:", err);
       setError("Failed to load tier lists.");
@@ -75,75 +115,85 @@ const PastTierLists = () => {
       Alert.alert("Deleted", `Tier list ${tierlistId} has been deleted.`);
       fetchTierLists();
     } catch (err) {
-      console.error("[PastTierLists] Delete error:", err);
+      console.error("Delete failed:", err);
       Alert.alert("Error", "Failed to delete tier list.");
     }
   };
 
-  if (loading) {
-    console.log("[PastTierLists] Loading...");
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#007bff" />
+  const renderItem = ({ item }: { item: TierList }) => (
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>
+          {subjectNames[item.subjectId] || "Loading..."}
+        </Text>
+        <Text style={styles.date}>
+          {new Date(item.createdAt).toLocaleDateString()}
+        </Text>
+
+        <View style={styles.singleRow}>
+          {assignmentsByList[item.tierlistId]?.map((a) => (
+              <View key={a.id} style={styles.pair}>
+                <View
+                    style={[styles.rankBox, { backgroundColor: rankColors[a.rankName] }]}
+                >
+                  <Text style={styles.rankText}>{a.rankName}</Text>
+                </View>
+                <Image source={{ uri: a.itemImage }} style={styles.itemImage} />
+              </View>
+          ))}
+        </View>
+
+        <View style={styles.buttonRow}>
+          <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={() => handleDeleteTierList(item.tierlistId)}
+          >
+            <Text style={styles.buttonText}>Delete</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+              style={styles.editButton}
+              onPress={() =>
+                  router.push(`/tierList?userID=${userID}&subjectId=${item.subjectId}`)
+              }
+          >
+            <Text style={styles.buttonText}>Edit</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+              style={styles.similarButton}
+              onPress={() =>
+                  router.push(`/similarTierLists?userID=${userID}&subjectId=${item.subjectId}`)
+              }
+          >
+            <Text style={styles.buttonText}>Similar Tier Lists</Text>
+          </TouchableOpacity>
+        </View>
       </View>
+  );
+
+  if (loading) {
+    return (
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" />
+        </View>
     );
   }
 
   if (error) {
-    console.log("[PastTierLists] Error state:", error);
     return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>{error}</Text>
-      </View>
-    );
-  }
-
-  const renderItem = ({ item }: { item: TierList }) => (
-    <View style={styles.listItem}>
-      <Text style={styles.listItemTitle}>
-        {subjectNames[item.subjectId] || "Loading..."}
-      </Text>
-      <Text style={styles.listItemDate}>
-        {new Date(item.createdAt).toLocaleDateString()}
-      </Text>
-      <View style={{ flexDirection: "row", marginTop: 10 }}>
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => handleDeleteTierList(item.tierlistId)}
-        >
-          <Text style={styles.deleteButtonText}>Delete</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={() =>
-            router.push(`/tierList?userID=${userID}&subjectId=${item.subjectId}`)
-          }
-        >
-          <Text style={styles.deleteButtonText}>Edit</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-
-  if (tierLists.length === 0) {
-    console.log("[PastTierLists] No tier lists found for the user.");
-    return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Your Past Tier Lists</Text>
-        <Text style={styles.noDataText}>No past tier lists found.</Text>
-      </View>
+        <View style={styles.centered}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Your Past Tier Lists</Text>
-      <FlatList
-        data={tierLists}
-        keyExtractor={(item) => item.tierlistId.toString()}
-        renderItem={renderItem}
-      />
-    </View>
+      <View style={styles.container}>
+        <Text style={styles.title}>Your Past Tier Lists</Text>
+        <FlatList
+            data={tierLists}
+            keyExtractor={(i) => i.tierlistId.toString()}
+            renderItem={renderItem}
+        />
+      </View>
   );
 };
 
@@ -161,58 +211,83 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 10,
     textAlign: "center",
+    marginBottom: 16,
     color: "#333",
   },
-  listItem: {
-    padding: 15,
+  card: {
     backgroundColor: "#fff",
     borderRadius: 8,
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
+    padding: 16,
+    marginBottom: 12,
     elevation: 3,
   },
-  listItemTitle: {
+  cardTitle: {
     fontSize: 18,
     fontWeight: "600",
-    marginBottom: 5,
     color: "#333",
   },
-  listItemDate: {
+  date: {
     fontSize: 14,
     color: "#666",
+    marginBottom: 12,
+  },
+  singleRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  pair: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginRight: 12,
+    marginBottom: 8,
+  },
+  rankBox: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 4,
+  },
+  rankText: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  itemImage: {
+    width: 50,
+    height: 50,
+    marginLeft: 8,
+    borderRadius: 4,
+  },
+  buttonRow: {
+    flexDirection: "row",
+    marginTop: 10,
+  },
+  deleteButton: {
+    backgroundColor: "#ff4444",
+    padding: 10,
+    borderRadius: 6,
+  },
+  editButton: {
+    backgroundColor: "#227755",
+    padding: 10,
+    borderRadius: 6,
+    marginLeft: 10,
+  },
+  similarButton: {
+    backgroundColor: "#007bff",
+    padding: 10,
+    borderRadius: 6,
+    marginLeft: "auto",
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "600",
+    textAlign: "center",
   },
   errorText: {
     fontSize: 16,
     color: "red",
-    marginTop: 10,
-    textAlign: "center",
-  },
-  noDataText: {
-    textAlign: "center",
-    fontSize: 16,
-    color: "#666",
-  },
-  deleteButton: {
-    backgroundColor: "#ff4444",
-    padding: 8,
-    borderRadius: 5,
-    alignSelf: "flex-start",
-  },
-  editButton: {
-    backgroundColor: "#227755",
-    padding: 8,
-    borderRadius: 5,
-    marginLeft: 10,
-    alignSelf: "flex-start",
-  },
-  deleteButtonText: {
-    color: "#fff",
-    fontSize: 14,
   },
 });
 
