@@ -62,6 +62,53 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("❌ Invalid email or password.");
     }
 
+//    update user using patch method
+    @PatchMapping("/{id}")
+    public ResponseEntity<String> patchUser(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
+        Optional<User> userOpt = userRepository.findById(id);
+
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+
+            updates.forEach((key, value) -> {
+                switch (key) {
+                    case "name" -> user.setName((String) value);
+                    case "image" -> user.setImage((String) value);
+                    case "isAdmin" -> user.setIsAdmin(Boolean.valueOf(value.toString()));
+                    // Add more fields here if needed
+                }
+            });
+
+            userRepository.save(user);
+            return ResponseEntity.ok("✅ User updated successfully!");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("❌ User not found.");
+        }
+    }
+    @PatchMapping("/update-password")
+    public ResponseEntity<String> patchUpdatePassword(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String oldPassword = request.get("oldPassword");
+        String newPassword = request.get("newPassword");
+
+        Optional<User> userOpt = userRepository.findByEmail(email);
+
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            String storedHashedPassword = user.getPassword();
+
+            if (passwordEncoder.matches(oldPassword, storedHashedPassword)) {
+                user.setPassword(passwordEncoder.encode(newPassword));
+                userRepository.save(user);
+                return ResponseEntity.ok("✅ Password updated successfully!");
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("❌ Incorrect old password.");
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("❌ Email not found.");
+        }
+    }
+
     // Get All Users
     @GetMapping("/")
     public List<User> getAllUsers() {
@@ -86,6 +133,18 @@ public class UserController {
     public ResponseEntity<?> getUserById(@PathVariable Long id) {
         Optional<User> user = userRepository.findById(id);
         return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+    @PutMapping("/{id}/admin-update-password")
+    public ResponseEntity<String> adminUpdatePassword(@PathVariable Long id, @RequestBody Map<String, String> request) {
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            String newPassword = request.get("newPassword");
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(user);
+            return ResponseEntity.ok("✅ Password updated by admin");
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("❌ User not found.");
     }
 
     // Update User (Only name and image can be updated)
