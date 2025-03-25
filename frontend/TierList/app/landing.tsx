@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -78,8 +78,8 @@ const LandingPage = () => {
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <Text>Loading...</Text>
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
       </View>
     );
   }
@@ -150,6 +150,12 @@ const LandingPage = () => {
 };
 
 const styles = StyleSheet.create({
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#1f2022",
+  },
   container: {
     flex: 1,
     backgroundColor: "#0a0a0a",

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { View, Text, TouchableOpacity,StyleSheet, } from "react-native";
+import { View, Text, TouchableOpacity,StyleSheet, ActivityIndicator } from "react-native";
 import { router, useLocalSearchParams } from 'expo-router';
 import { Image } from "expo-image";
 import { useFonts } from "expo-font";
@@ -254,7 +254,11 @@ const TierList = () => {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
 
   return (
@@ -468,6 +472,12 @@ const TierList = () => {
 };
 
 const styles = StyleSheet.create({
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#1f2022",
+  },
   container: {
     flex: 1,
     backgroundColor: "#1f2022",

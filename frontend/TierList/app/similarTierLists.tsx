@@ -468,6 +468,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#1f2022",
   },
   error: {
     fontFamily: "Arial",
@@ -559,7 +560,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   actionButtonText: {
-    color: "#fcfcfc",
+    color: "#0a0a0a",
     fontWeight: "600",
     fontFamily: "Arial",
   },

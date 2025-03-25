@@ -177,6 +177,8 @@ const styles = StyleSheet.create({
   centered: {
     flex: 1,
     justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#1f2022",
   },
   container: {
     flex: 1,
