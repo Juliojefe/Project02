@@ -1,13 +1,18 @@
-// frontend/playwright.config.ts
-import { defineConfig } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
-    testDir: './e2e', // 🔥 ONLY run tests from this folder
-    testMatch: '**/*.spec.ts',
-    use: {
-        baseURL: 'http://localhost:19006',
-        headless: false,
-        viewport: { width: 1280, height: 720 },
-        ignoreHTTPSErrors: true,
-    },
+    // ✅ Put slowMo inside launchOptions in the project config
+    projects: [
+        {
+            timeout: 60000,
+            name: 'chromium',
+            use: {
+                ...devices['Desktop Chrome'],
+                launchOptions: {
+                    slowMo: 1500,         // 👈 This is the valid spot
+                    headless: false
+                },
+            },
+        },
+    ],
 });
