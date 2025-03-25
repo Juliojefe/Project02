@@ -77,7 +77,7 @@ const AdminEditUserPage = () => {
       }
 
       Alert.alert("Success", "User updated successfully!");
-      router.replace(`/viewUsers?userID=${selectedUserID}`); // go back to view
+      router.replace(`/viewUsers?userID=${userID}`); // go back to view
     } catch (error) {
       console.error(error);
       Alert.alert("Error", "Failed to update user.");
