@@ -22,9 +22,18 @@ public class SecurityConfig {
 //                                 "/users/forgot-password", "/users/update-password", "/api/**", "/tierlists/**", "/api/tierlists/**").permitAll()
 //                         .anyRequest().authenticated()
                 )
+<<<<<<< HEAD
                 .csrf(csrf -> csrf.disable())
                 .oauth2Login(oauth2 -> oauth2.defaultSuccessUrl("/auth/login/success", true))
                 .logout(logout -> logout.logoutSuccessUrl("/")); // Logout URL
+=======
+//                .oauth2Login(oauth2 -> oauth2
+//                        .defaultSuccessUrl("/auth/login/success", true) // Redirect after login
+//                )
+                .logout(logout -> logout.logoutSuccessUrl("/")) // Logout URL
+                .csrf(csrf -> csrf.disable());
+
+>>>>>>> a7b572f ( UI test)
         return http.build();
     }
 
