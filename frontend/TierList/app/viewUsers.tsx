@@ -52,25 +52,25 @@ const ViewUsersPage = () => {
     router.push(`/adminDeleteAccount?userID=${encodeURIComponent(userID)}&selectedUserID=${encodeURIComponent(id)}`);
   };
 
-  const handleHome = useCallback(() => {
+  const handleHome = () => {
     if (router.pathname !== "/landing") {
       router.push(`/landing?userID=${encodeURIComponent(userID)}`);
     }
-  }, [userID]);
+  };
 
   // Viewing Tier lists
-  const handleTierLists = useCallback(() => {
+  const handleTierLists = () => {
     if (router.pathname !== "/viewCurrentSubjects") {
       router.push(`/viewCurrentSubjects?userID=${encodeURIComponent(userID)}`);
     }
-  }, [userID]);
+  };
 
   // View Settings Functionality
-  const handleSettings = useCallback(() => {
+  const handleSettings = () => {
     if (router.pathname !== "/settings") {
       router.push(`/settings?userID=${encodeURIComponent(userID)}`);
     }
-  }, [userID]);
+  };
 
   // Logout Functionality
   const handleLogout = () => {
