@@ -1,16 +1,23 @@
-import React, { useState, useCallback } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  FlatList,
+  ActivityIndicator,
+} from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { useState, useEffect, React, useCallback } from "react";
 import axios from "axios";
 import { Image } from "expo-image";
 import { useFonts } from "expo-font";
 
-const DeleteAccountPage = () => {
+const ViewCurrentSubjectsPage = () => {
   const { userID } = useLocalSearchParams();
-  const [deleteAccountError, setDeleteAccountError] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  
+  const [loading, setLoading] = useState(true);
+  const [selectedId, setSelectedId] = useState(null);
+  const [subjects, setSubjects] = useState([]);
+
   const [fontsLoaded] = useFonts({
     "Silverknife-RegularItalic": require("@/assets/fonts/Silverknife-RegularItalic.otf"),
   });
@@ -26,55 +33,51 @@ const DeleteAccountPage = () => {
   const landingLogo = require("@/assets/images/HotTakesLogoWithRightText.png");
   const footerLogo = require("@/assets/images/CSUMB-COS-Logo.png");
 
-  const handleDeleteAccount = async () => {
-    // Checks to make sure that the user answered all
-    // the fields and passwords are matching
-    if (!password) {
-      setDeleteAccountError("⚠️ Please enter your password.");
-      return;
-    } else if (!confirmPassword) {
-      setDeleteAccountError("⚠️ Please re-enter your password.");
-      return;
-    } else if (password != confirmPassword) {
-      setDeleteAccountError("⚠️ Your passwords don't match.");
-      return;
-    }
+  useEffect(() => {
+    const handleGetSubjects = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:8080/api/subjects/current`
+        );
+        setSubjects(response.data);
+      } catch (error) {
+        console.log("Error getting current subjects of the week: ", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    handleGetSubjects();
+  }, []);
 
-    // Checks to delete the user and will be routed to home page if account deletion is successful
-    try {
-      const response = await axios.delete(
-        `http://localhost:8080/users/${userID}`,
-        {
-          data: {
-            password: password,
-          },
-        }
-      );
-      if (
-        response.status === 200 &&
-        response.data === "✅ User deleted successfully!"
-      ) {
-        router.dismissAll();
-        router.replace("/");
-      }
-    } catch (error) {
-      if (error.response) {
-        setDeleteAccountError(`${error.response.data}`);
-        console.log(
-          "Error deleting user (server response): ",
-          error.response.data
-        );
-      } else if (error.request) {
-        setDeleteAccountError("Error: No response from server");
-        console.log(
-          "Error deleting user (no server response): ",
-          error.request
-        );
-      } else {
-        setDeleteAccountError("Error: An unexpected error occurred");
-        console.log("Error deleting user (unexpected): ", error.message);
-      }
-    }
+  // Turns the subject names into proper casing with the first letter of each word capitalized
+  function titleCase(str) {
+    return str
+      .toLowerCase()
+      .split(' ')
+      .map(function(word) {
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      })
+      .join(' ');
+  }
+
+  const Item = ({ item, onPress, backgroundColor, textColor }) => (
+    <TouchableOpacity onPress={onPress} style={[styles.subjectItem, { backgroundColor }]}>
+      <Text style={[styles.subjectTitle, { color: textColor }]}>{titleCase(item.name.toLowerCase())}</Text>
+    </TouchableOpacity>
+  );
+
+  const renderSubjectItem = ({ item }) => {
+  
+    return (
+      <Item
+        style={styles.subjectItem}
+        item={item}
+        onPress={() => {
+          setSelectedId(item.subjectId);
+          router.push(`/tierList?userID=${encodeURIComponent(userID)}&subjectId=${encodeURIComponent(item.subjectId)}`);
+        }}
+      />
+    );
   };
 
   const handleHome = useCallback(() => {
@@ -103,6 +106,14 @@ const DeleteAccountPage = () => {
     router.replace("/");
   };
 
+  if (loading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <View>
@@ -129,34 +140,14 @@ const DeleteAccountPage = () => {
         </View>
       </View>
 
-      <View style={styles.mainContent}>
-      <View style={styles.card}>
-        <Text style={styles.heading}>DELETING YOUR OWN ACCOUNT</Text>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your password"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
-        </View>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Confirm Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Re-enter your password"
-            secureTextEntry
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-          />
-        </View>
-        <Text style={styles.errorText}>{deleteAccountError}</Text>
-        <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount}>
-          <Text style={styles.deleteButtonText}>Delete Account</Text>
-        </TouchableOpacity>
-      </View>
+      <Text style={styles.subjectsHeader}>CURRENT SUBJECTS FOR THE WEEK</Text>
+      <Text style={styles.subjectsDescription}>Choose one of the following subjects and create a tier list. </Text>
+      <View style={styles.flatListContainer}>
+        <FlatList
+          data={subjects}
+          renderItem={renderSubjectItem}
+          keyExtractor={(item) => item.subjectId.toString()}
+        />
       </View>
 
       {/* Footer */}
@@ -210,65 +201,39 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontFamily: "Arial",
   },
-  mainContent: {
-    flex: 1,
-    marginTop: "2%",
-    justifyContent: "flex-start",
-    alignItems: "center",
-    marginBottom: 100,
-  },
-  card: {
-    backgroundColor: "#131515",
-    padding: 20,
-    borderRadius: 10,
-    width: "30%",
-    flexGrow: 1,
-    minHeight: 100,
-  },
-  heading: {
+  subjectsHeader: {
     fontSize: 50,
     color: "#ffcf33",
     textAlign: "center",
-    marginBottom: 20,
+    marginTop: 20,
+    marginBottom: 5,
     fontFamily: "Silverknife-RegularItalic",
     letterSpacing: 2,
   },
-  inputContainer: {
-    marginBottom: 15,
-  },
-  label: {
-    fontWeight: "bold",
+  subjectsDescription: {
+    fontSize: 16,
     color: "#fcfcfc",
-    marginBottom: 5,
+    textAlign: "center",
+    marginBottom: 20,
     fontFamily: "Arial",
   },
-  input: {
-    width: "100%",
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#4E5056",
-    borderRadius: 5,
-    fontSize: 14,
-    backgroundColor: "#131515",
-    color: "#fcfcfc",
-    fontFamily: "Arial",
-  },
-  deleteButton: {
-    padding: 12,
-    backgroundColor: "#761511",
-    borderRadius: 100,
+  flatListContainer: {
     alignItems: "center",
-    marginTop: 10,
+    justifyContent: 'center',
   },
-  deleteButtonText: {
-    color: "#fcfcfc",
-    fontSize: 16,
+  subjectItem: {
+    padding: 20,
+    marginVertical: 10,
+    borderRadius: 100,
+    backgroundColor: "#761511",
+    justifyContent: "center",
+    alignItems: "center", 
+  },
+  subjectTitle: {
+    fontSize: 20,
     fontWeight: "bold",
+    color: "#fcfcfc",
     fontFamily: "Arial",
-  },
-  errorText: {
-    color: "#e1342c",
-    fontSize: 16,
   },
   footer: {
     backgroundColor: "#b5c8da",
@@ -295,4 +260,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DeleteAccountPage;
+export default ViewCurrentSubjectsPage;

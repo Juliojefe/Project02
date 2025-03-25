@@ -5,14 +5,32 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  ActivityIndicator
 } from "react-native";
 
 import { router } from "expo-router";
 import axios from "axios";
+import { Image } from "expo-image";
+import { useFonts } from "expo-font";
 
 const SignupPage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [signupError, setSignupError] = useState("");
+
+  const [fontsLoaded] = useFonts({
+    "Silverknife-RegularItalic": require("@/assets/fonts/Silverknife-RegularItalic.otf"),
+  });
+
+  if (!fontsLoaded) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  const logo = require("@/assets/images/HotTakesLogo.png");
+  const footerLogo = require("@/assets/images/CSUMB-COS-Logo.png");
 
   const [user, setUser] = useState({
     name: "",
@@ -71,10 +89,15 @@ const SignupPage = () => {
     }
   };
 
+  const handleLogin = () => {
+    router.push("/login");
+  }
+
   return (
     <View style={styles.container}>
+      <Image source={logo} style={styles.logoImage} resizeMode="contain" />
       <View style={styles.card}>
-        <Text style={styles.heading}>Greetings, let's get you situated.</Text>
+        <Text style={styles.heading}>CREATE A NEW ACCOUNT</Text>
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Name</Text>
           <TextInput
@@ -114,69 +137,140 @@ const SignupPage = () => {
           />
         </View>
         <Text style={styles.errorText}>{signupError}</Text>
-        <TouchableOpacity style={styles.button} onPress={handleSignup}>
-          <Text style={styles.buttonText}>Sign up</Text>
+        {/* <View style={styles.signupButtonContainer}> */}
+        <TouchableOpacity style={styles.signupButton} onPress={handleSignup}>
+          <Text style={styles.signupButtonText}>Sign up</Text>
         </TouchableOpacity>
+        {/* </View> */}
+        <TouchableOpacity onPress={handleLogin}>
+          <Text style={styles.loginLink}><br/><br/>Already have an Account?</Text>
+        </TouchableOpacity>
+      </View>
+      {/* Footer */}
+      <View style={styles.footer}>
+        <Image
+          source={footerLogo}
+          style={styles.footerImage}
+          resizeMode="contain"
+        />
+        <Text style={styles.footerText}>
+          CST438 2025© Jayson Basilio, Julio Fernandez, Ozzie Munoz, Ahmed Torki
+          <br />
+          Tier List Project 02 - Hot Takes
+        </Text>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  centered: {
     flex: 1,
     justifyContent: "center",
+    backgroundColor: "#1f2022",
+  },
+  container: {
+    flex: 1,
+    justifyContent: "flex-start",
     alignItems: "center",
-    backgroundColor: "#f0f2f5",
+    backgroundColor: "#0a0a0a",
+  },
+  logoImage: {
+    width: "5%",
+    height: undefined,
+    aspectRatio: 1,
+    margin: "1%",
   },
   card: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#1f2022",
     padding: 20,
     borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    width: 300,
+    width: "30%",
+    height: "70%",
   },
   heading: {
-    fontSize: 22,
-    color: "#333",
+    fontSize: "300%",
+    color: "#ffcf33",
     textAlign: "center",
     marginBottom: 20,
+    fontFamily: "Silverknife-RegularItalic",
+    letterSpacing: 2,
   },
   inputContainer: {
     marginBottom: 15,
   },
   label: {
     fontWeight: "bold",
-    color: "#555",
+    color: "#fcfcfc",
     marginBottom: 5,
+    fontFamily: "Arial",
   },
   input: {
     width: "100%",
     padding: 10,
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#4E5056",
     borderRadius: 5,
     fontSize: 14,
-    backgroundColor: "#fff",
+    backgroundColor: "#1f2022",
+    color: "#fcfcfc",
+    fontFamily: "Arial",
   },
-  button: {
+  signupButtonContainer: {
+    justifyContent: "center",
+    width: "50%",
+  },
+  signupButton: {
     padding: 12,
-    backgroundColor: "#007bff",
-    borderRadius: 5,
+    backgroundColor: "#f07b16",
+    borderRadius: 100,
     alignItems: "center",
     marginTop: 10,
+    marginHorizontal: "25%",
   },
-  buttonText: {
+  signupButtonText: {
     color: "white",
-    fontSize: 16,
+    fontWeight: "bold",
+    fontSize: 19,
+    fontFamily: "Arial",
   },
   errorText: {
-    color: "red",
+    textAlign: "center",
+    color: "#e1342c",
     fontSize: 16,
+    fontFamily: "Arial",
+  },
+  loginLink: {
+    color: "#1d9bf2",
+    textAlign: "center",
+    fontSize: 15,
+    fontFamily: "Arial",
+  },
+  footer: {
+    position: "absolute",
+    bottom: "0%",
+    left: "0%",
+    right: "0%",
+    backgroundColor: "#b5c8da",
+    paddingVertical: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    borderTopWidth: 2,
+    borderTopColor: "#fcfcfc",
+  },
+  footerImage: {
+    width: 125,
+    height: 40,
+    marginBottom: 5,
+    resizeMode: "contain",
+  },
+  footerText: {
+    color: "#31456b",
+    fontSize: 14,
+    marginBottom: 5,
+    textAlign: "center",
+    justifyContent: "center",
+    fontFamily: "Arial",
   },
 });
 

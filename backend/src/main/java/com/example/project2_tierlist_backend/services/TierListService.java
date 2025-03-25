@@ -3,9 +3,16 @@ package com.example.project2_tierlist_backend.services;
 import com.example.project2_tierlist_backend.dto.TierListRequest;
 import com.example.project2_tierlist_backend.models.*;
 import com.example.project2_tierlist_backend.repository.*;
+import com.example.project2_tierlist_backend.dto.SimilarTierListDTO;
+import com.example.project2_tierlist_backend.services.EmbeddingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.Collections;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class TierListService {
@@ -27,6 +34,8 @@ public class TierListService {
 
     @Autowired
     private ItemRankRepository itemRankRepository;
+
+    @Autowired private EmbeddingService embed;
 
     public TierList createTierList(Long userId, Long subjectId, List<TierListRequest.Assignment> assignments) {
         // Validate user and subject
@@ -80,7 +89,7 @@ public class TierListService {
                 .orElse("Untitled");
         String tierListName = "Tier List for " + subjectName;
 
-        TierList existingTierList = tierListRepository.findByUserIdAndSubjectId(userId, subjectId);
+        TierList existingTierList = tierListRepository.findByUserIdAndSubjectId(userId.intValue(), subjectId);
         if (existingTierList != null) {
             // Update existing tier list
             existingTierList.setName(tierListName); // Ensure name is updated
@@ -126,5 +135,37 @@ public class TierListService {
             }
             return newTierList;
         }
+    }
+
+    public List<SimilarTierListDTO> getSimilarLists(Integer userId, Long subjectId, int minSimilarity) {
+        TierList userTier = tierListRepository.findByUserIdAndSubjectId(userId, subjectId);
+        if (userTier == null) return Collections.emptyList();
+
+        List<TierListItem> userItems = tierListItemRepository.findByTierlistId(userTier.getTierlistId().longValue());
+        List<Double> userVec = userItems.stream()
+                .map(i -> tierItemRepository.findById(i.getItemId().intValue()).orElseThrow().getName())
+                .map(embed::getEmbedding)
+                .reduce(EmbeddingService::averageVectors)
+                .orElseThrow();
+
+        List<TierList> allLists = tierListRepository.findBySubjectId(subjectId);
+        List<SimilarTierListDTO> results = new ArrayList<>();
+
+        for (TierList other : allLists) {
+            if (other.getTierlistId().equals(userTier.getTierlistId())) continue;
+
+            List<Double> otherVec = tierListItemRepository.findByTierlistId(other.getTierlistId().longValue())
+                    .stream()
+                    .map(i -> tierItemRepository.findById(i.getItemId().intValue()).orElseThrow().getName())
+                    .map(embed::getEmbedding)
+                    .reduce(EmbeddingService::averageVectors)
+                    .orElse(List.of());
+
+            double sim = EmbeddingService.cosineSimilarity(userVec, otherVec) * 100;
+            if (sim >= minSimilarity) {
+                results.add(new SimilarTierListDTO(other, (int) sim));
+            }
+        }
+        return results;
     }
 }

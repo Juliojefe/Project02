@@ -1,16 +1,28 @@
-import React, { useState, useCallback } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import axios from "axios";
 import { Image } from "expo-image";
 import { useFonts } from "expo-font";
 
-const DeleteAccountPage = () => {
+export default function EditUserPage() {
+  const router = useRouter();
+  // "userID" comes from the query string ?userID=...
   const { userID } = useLocalSearchParams();
-  const [deleteAccountError, setDeleteAccountError] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  
+
+  const [name, setName] = useState("");
+  const [image, setImage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
   const [fontsLoaded] = useFonts({
     "Silverknife-RegularItalic": require("@/assets/fonts/Silverknife-RegularItalic.otf"),
   });
@@ -26,53 +38,37 @@ const DeleteAccountPage = () => {
   const landingLogo = require("@/assets/images/HotTakesLogoWithRightText.png");
   const footerLogo = require("@/assets/images/CSUMB-COS-Logo.png");
 
-  const handleDeleteAccount = async () => {
-    // Checks to make sure that the user answered all
-    // the fields and passwords are matching
-    if (!password) {
-      setDeleteAccountError("⚠️ Please enter your password.");
-      return;
-    } else if (!confirmPassword) {
-      setDeleteAccountError("⚠️ Please re-enter your password.");
-      return;
-    } else if (password != confirmPassword) {
-      setDeleteAccountError("⚠️ Your passwords don't match.");
-      return;
-    }
-
-    // Checks to delete the user and will be routed to home page if account deletion is successful
-    try {
-      const response = await axios.delete(
-        `http://localhost:8080/users/${userID}`,
-        {
-          data: {
-            password: password,
-          },
-        }
-      );
-      if (
-        response.status === 200 &&
-        response.data === "✅ User deleted successfully!"
-      ) {
-        router.dismissAll();
-        router.replace("/");
+  // Fetch existing user data to pre-fill fields
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await axios.get(`http://localhost:8080/users/${userID}`);
+        setName(res.data.name || "");
+        setImage(res.data.image || "");
+      } catch (error) {
+        setErrorMessage("Could not load user details.");
+      } finally {
+        setLoading(false);
       }
+    };
+    fetchUser();
+  }, [userID]);
+
+  const handlePatchUser = async () => {
+    setErrorMessage("");
+    try {
+      await axios.patch(`http://localhost:8080/users/${userID}`, {
+        name: name,
+        image: image,
+      });
+      Alert.alert("Success", "User updated successfully!");
+      // Navigate back or wherever you want
+      router.push(`/landing?userID=${encodeURIComponent(userID)}`);
     } catch (error) {
-      if (error.response) {
-        setDeleteAccountError(`${error.response.data}`);
-        console.log(
-          "Error deleting user (server response): ",
-          error.response.data
-        );
-      } else if (error.request) {
-        setDeleteAccountError("Error: No response from server");
-        console.log(
-          "Error deleting user (no server response): ",
-          error.request
-        );
+      if (error.response && error.response.data) {
+        setErrorMessage(error.response.data);
       } else {
-        setDeleteAccountError("Error: An unexpected error occurred");
-        console.log("Error deleting user (unexpected): ", error.message);
+        setErrorMessage("Failed to update user.");
       }
     }
   };
@@ -103,6 +99,14 @@ const DeleteAccountPage = () => {
     router.replace("/");
   };
 
+  if (loading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <View>
@@ -130,33 +134,36 @@ const DeleteAccountPage = () => {
       </View>
 
       <View style={styles.mainContent}>
-      <View style={styles.card}>
-        <Text style={styles.heading}>DELETING YOUR OWN ACCOUNT</Text>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your password"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
+        <View style={styles.card}>
+        <Text style={styles.editHeader}>EDIT USER</Text>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter new name"
+              value={name}
+              onChangeText={setName}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Image URL</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter new image URL"
+              value={image}
+              onChangeText={setImage}
+            />
+          </View>
+
+          {errorMessage ? (
+            <Text style={styles.error}>{errorMessage}</Text>
+          ) : null}
+
+          <TouchableOpacity style={styles.button} onPress={handlePatchUser}>
+            <Text style={styles.buttonText}>Save Changes</Text>
+          </TouchableOpacity>
         </View>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Confirm Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Re-enter your password"
-            secureTextEntry
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-          />
-        </View>
-        <Text style={styles.errorText}>{deleteAccountError}</Text>
-        <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount}>
-          <Text style={styles.deleteButtonText}>Delete Account</Text>
-        </TouchableOpacity>
-      </View>
       </View>
 
       {/* Footer */}
@@ -174,17 +181,21 @@ const DeleteAccountPage = () => {
       </View>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   centered: {
     flex: 1,
     justifyContent: "center",
+    alignItems: "center",
     backgroundColor: "#1f2022",
   },
   container: {
     flex: 1,
     backgroundColor: "#1f2022",
+    display: "flex",
+    flexDirection: "column",
+    minHeight: "100vh",
   },
   headerContainer: {
     flexDirection: "row",
@@ -225,7 +236,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     minHeight: 100,
   },
-  heading: {
+  editHeader: {
     fontSize: 50,
     color: "#ffcf33",
     textAlign: "center",
@@ -253,22 +264,22 @@ const styles = StyleSheet.create({
     color: "#fcfcfc",
     fontFamily: "Arial",
   },
-  deleteButton: {
+  button: {
     padding: 12,
-    backgroundColor: "#761511",
+    backgroundColor: "#0cce6b",
     borderRadius: 100,
     alignItems: "center",
     marginTop: 10,
   },
-  deleteButtonText: {
-    color: "#fcfcfc",
+  buttonText: {
+    color: "#0a0a0a",
     fontSize: 16,
     fontWeight: "bold",
     fontFamily: "Arial",
   },
-  errorText: {
+  error: {
     color: "#e1342c",
-    fontSize: 16,
+    marginTop: 12,
   },
   footer: {
     backgroundColor: "#b5c8da",
@@ -294,5 +305,3 @@ const styles = StyleSheet.create({
     fontFamily: "Arial",
   },
 });
-
-export default DeleteAccountPage;

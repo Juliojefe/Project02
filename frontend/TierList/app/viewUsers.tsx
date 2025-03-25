@@ -1,42 +1,87 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, React, useCallback } from "react";
 import axios from "axios";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { Menu, MenuOptions, MenuOption, MenuTrigger, MenuProvider, } from "react-native-popup-menu";
+import { Image } from "expo-image";
+import { useFonts } from "expo-font";
 
 const ViewUsersPage = () => {
   const { userID } = useLocalSearchParams();
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
+  const userIdValue = Array.isArray(userID) ? userID[0] : userID;
+  
+  const [fontsLoaded] = useFonts({
+    "Silverknife-RegularItalic": require("@/assets/fonts/Silverknife-RegularItalic.otf"),
+  });
+
+  if (!fontsLoaded) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  const landingLogo = require("@/assets/images/HotTakesLogoWithRightText.png");
+  const footerLogo = require("@/assets/images/CSUMB-COS-Logo.png");
 
   useEffect(() => {
+    const handleViewUsers = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8080/users/`);
+        setUsers(response.data);
+      } catch (error) {
+        console.log("Error getting all user data: ", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
     handleViewUsers();
   }, []);
 
-  const handleViewUsers = async () => {
-    try {
-      const response = await axios.get(`http://localhost:8080/users/`);
-      setUsers(response.data);
-    } catch (error) {
-      console.log("Error getting all user data: ", error);
-    } finally {
-      setLoading(false);
+  const handleEditAccount = (id) => {
+    router.push(`/AdminEditUserPage?userID=${encodeURIComponent(userID)}&selectedUserID=${encodeURIComponent(id)}`);
+  };
+
+  const handleDeleteAccount = (id) => {
+    router.push(`/adminDeleteAccount?userID=${encodeURIComponent(userID)}&selectedUserID=${encodeURIComponent(id)}`);
+  };
+
+  const handleHome = useCallback(() => {
+    if (router.pathname !== "/landing") {
+      router.push(`/landing?userID=${encodeURIComponent(userID)}`);
     }
-  };
+  }, [userID]);
 
-  const handleEditAccount = async () => { 
-    alert("Pressed button to edit account")
-  };
+  // Viewing Tier lists
+  const handleTierLists = useCallback(() => {
+    if (router.pathname !== "/viewCurrentSubjects") {
+      router.push(`/viewCurrentSubjects?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
 
-  const handleDeleteAccount = () => {
-    router.push(`/adminDeleteAccount?userID=${encodeURIComponent(userID)}`);
+  // View Settings Functionality
+  const handleSettings = useCallback(() => {
+    if (router.pathname !== "/settings") {
+      router.push(`/settings?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
+
+  // Logout Functionality
+  const handleLogout = () => {
+    router.dismissAll();
+    router.replace("/");
   };
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <Text>Loading...</Text>
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
       </View>
     );
   }
@@ -61,76 +106,166 @@ const ViewUsersPage = () => {
 
   const renderAdminItem = ({ item }) => (
     <View style={styles.userBox}>
-      <Text style={styles.adminItem}>
-        <Text style={styles.type}>ID:</Text> {item.id}
-      </Text>
+      <View style={styles.userItemHeader}>
+        <Text style={styles.type}>
+          User ID: <Text style={styles.adminItem}>#{item.id}</Text>
+        </Text>
+        <Menu>
+          <MenuTrigger>
+            <Text style={styles.menuTrigger}>⋮</Text>
+          </MenuTrigger>
+          <MenuOptions style={styles.menuStyle}>
+            <MenuOption onSelect={() => handleEditAccount(item.id)}>
+              <Text style={styles.menuOption}>Edit</Text>
+            </MenuOption>
+            <MenuOption onSelect={() => handleDeleteAccount(item.id)}>
+              <Text style={styles.menuOption}>Delete</Text>
+            </MenuOption>
+          </MenuOptions>
+        </Menu>
+      </View>
       <Text style={styles.adminItem}>
         <Text style={styles.type}>Name:</Text> {item.name}
       </Text>
       <Text style={styles.adminItem}>
         <Text style={styles.type}>Email:</Text> {item.email}
       </Text>
-      <TouchableOpacity style={styles.button} onPress={handleEditAccount}>
-          <Text style={styles.buttonText}>Edit Account</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={handleDeleteAccount}>
-          <Text style={styles.buttonText}>Delete Account</Text>
-        </TouchableOpacity>
     </View>
   );
-
+  
   const renderNormalItem = ({ item }) => (
     <View style={styles.userBox}>
-      <Text>
-        <Text style={styles.type}>ID:</Text> {item.id}
-      </Text>
-      <Text>
+      <View style={styles.userItemHeader}>
+        <Text style={styles.type}>User ID: #{item.id}</Text>
+        <Menu>
+          <MenuTrigger>
+            <Text style={styles.menuTrigger}>⋮</Text>
+          </MenuTrigger>
+          <MenuOptions style={styles.menuStyle}>
+            <MenuOption onSelect={() => handleEditAccount(item.id)}>
+              <Text style={styles.menuOption}>Edit</Text>
+            </MenuOption>
+            <MenuOption onSelect={() => handleDeleteAccount(item.id)}>
+              <Text style={styles.menuOption}>Delete</Text>
+            </MenuOption>
+          </MenuOptions>
+        </Menu>
+      </View>
+      <Text style={styles.renderText}>
         <Text style={styles.type}>Name:</Text> {item.name}
       </Text>
-      <Text>
+      <Text style={styles.renderText}>
         <Text style={styles.type}>Email:</Text> {item.email}
       </Text>
-      <TouchableOpacity style={styles.button} onPress={handleEditAccount}>
-          <Text style={styles.buttonText}>Edit Account</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={handleDeleteAccount}>
-          <Text style={styles.buttonText}>Delete Account</Text>
-        </TouchableOpacity>
     </View>
   );
+  
 
   return (
-    <SafeAreaProvider>
-      <SafeAreaView style={styles.container}>
-        <View style={styles.listContainer}>
-          <Text style={styles.adminSectionTitle}>Admin Users</Text>
-          <FlatList
-            data={adminUsers}
-            renderItem={renderAdminItem}
-            keyExtractor={(item) => item.id.toString()}
-          />
+    <MenuProvider>
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.container}>
+          <View>
+            <View style={styles.headerContainer}>
+              <Image source={landingLogo} style={styles.logoImage} resizeMode="contain" />
+            </View>
+            <View style={styles.navbar}>
+              <TouchableOpacity style={styles.navButton} onPress={handleHome}>Home</TouchableOpacity>
+              <TouchableOpacity style={styles.navButton} onPress={handleTierLists}>Create new Tier List</TouchableOpacity>
+              <TouchableOpacity style={styles.navButton} onPress={handleSettings}>Settings</TouchableOpacity>
+              <TouchableOpacity style={styles.navButton} onPress={handleLogout}>Log Out</TouchableOpacity>
+            </View>
+          </View>
+          <View style={styles.columnContainer}>
+            <View style={styles.leftColumn}>
+              <Text style={styles.adminSectionTitle}>Admin Users</Text>
+              <FlatList
+                data={adminUsers}
+                renderItem={renderAdminItem}
+                keyExtractor={(item) => item.id.toString()}
+              />
+            </View>
 
-          <View style={styles.horizontalLine} />
-
-          <Text style={styles.userSectionTitle}>Normal Users</Text>
-          <FlatList
-            data={normalUsers}
-            renderItem={renderNormalItem}
-            keyExtractor={(item) => item.id.toString()}
-          />
-        </View>
-      </SafeAreaView>
-    </SafeAreaProvider>
+            <View style={styles.rightColumn}>
+              <Text style={styles.userSectionTitle}>Normal Users</Text>
+              <FlatList
+                data={normalUsers}
+                renderItem={renderNormalItem}
+                keyExtractor={(item) => item.id.toString()}
+              />
+            </View>
+          </View>
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Image
+              source={footerLogo}
+              style={styles.footerImage}
+              resizeMode="contain"
+            />
+            <Text style={styles.footerText}>
+              CST438 2025© Jayson Basilio, Julio Fernandez, Ozzie Munoz, Ahmed Torki
+              <br />
+              Tier List Project 02 - Hot Takes
+            </Text>
+          </View>
+        </SafeAreaView>
+      </SafeAreaProvider>
+    </MenuProvider>
   );
 };
 
 const styles = StyleSheet.create({
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "#1f2022",
+  },
   container: {
     flex: 1,
+    backgroundColor: "#0a0a0a",
+  },
+  headerContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  }, 
+  logoImage: {
+    width: "18%",
+    height: undefined,
+    aspectRatio: 2.5,
+  },
+  navbar: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingBottom: 20,
+  },
+  navButton: {
+    paddingHorizontal: 15,
+    color: "#fcfcfc",
+    fontWeight: "bold",
+    fontFamily: "Arial",
+  },
+  columnContainer: {
+    flex: 1,
+    flexDirection: "row",
+    paddingBottom: 50,
+    backgroundColor: "#1f2022",
+  },
+  leftColumn: {
+    flex: 1,
+    justifyContent: "flex-start",
+    paddingHorizontal: "2%",
+    backgroundColor: "#1f2022",
+  },
+  rightColumn: {
+    flex: 1,
+    justifyContent: "flex-start",
+    paddingHorizontal: "2%",
+    backgroundColor: "#1f2022",
   },
   listContainer: {
     flex: 1,
-    padding: 15,
     overflow: "scroll",
   },
   userContainer: {
@@ -139,64 +274,91 @@ const styles = StyleSheet.create({
   },
   type: {
     fontWeight: "bold",
+    color: "#fcfcfc",
+    fontFamily: "Arial",
+    fontSize: 18,
+    paddingVertical: "0.2%",
+  },
+  renderText: {
+    color: "#fcfcfc",
+    fontFamily: "Arial",
+    fontSize: 18,
+    paddingVertical: "0.2%",
   },
   adminSectionTitle: {
-    fontSize: 25,
+    fontSize: 50,
     fontWeight: "bold",
-    color: "#00FF41",
+    color: "#0cce6b",
     padding: 20,
     marginVertical: 10,
-    backgroundColor: "#0e0e0e",
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 100,
+    fontFamily: "Silverknife-RegularItalic",
     textAlign: "center",
-    
+    justifyContent: "center",
+    letterSpacing: 2,
   },
   userSectionTitle: {
-    fontSize: 25,
+    fontSize: 50,
     fontWeight: "bold",
-    color: "#fff",
+    color: "#FFCC33",
     padding: 20,
     marginVertical: 10,
-    backgroundColor: "#0e0e0e",
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 100,
+    fontFamily: "Silverknife-RegularItalic",
     textAlign: "center",
+    justifyContent: "center",
+    letterSpacing: 2,
   },
   userBox: {
     justifyContent: "space-between",
     padding: 10,
     marginVertical: 5,
-    backgroundColor: "#e8e8e8",
+    backgroundColor: "#131515",
     borderRadius: 10,
   },
   adminItem: {
-    color: "#27592D",
+    color: "#0CCE6B",
+    fontFamily: "Arial",
+    fontSize: 18,
+    paddingVertical: "0.2%",
   },
-  kebabButton: {
-    padding: 5,
+  userItemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
-  menu: {
-    position: "absolute",
-    right: 0,
+  menuStyle: {
+    backgroundColor: "#131515",
   },
-  button: {
-    padding: 12,
-    backgroundColor: "#007bff",
-    borderRadius: 5,
-    marginTop: 10,
+  menuTrigger: {
+    fontSize: 20,
+    color: '#fcfcfc',
   },
-  buttonText: {
-    color: "white",
-    fontSize: 12,
+  menuOption: {
+    padding: 10,
+    fontSize: 16,
     fontWeight: "bold",
+    color: "#fcfcfc",
   },
-  horizontalLine: {
-    borderBottomColor: "#000",
-    borderBottomWidth: 1,
-    marginVertical: 10,
+  footer: {
+    backgroundColor: "#b5c8da",
+    paddingVertical: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    borderTopWidth: 2,
+    borderTopColor: "#fcfcfc",
+    marginTop: "auto",
+  },
+  footerImage: {
+    width: 125,
+    height: 40,
+    marginBottom: 5,
+    resizeMode: "contain",
+  },
+  footerText: {
+    color: "#31456b",
+    fontSize: 14,
+    marginBottom: 5,
+    textAlign: "center",
+    justifyContent: "center",
+    fontFamily: "Arial",
   },
 });
 

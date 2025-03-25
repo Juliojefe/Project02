@@ -1,16 +1,28 @@
-import React, { useState, useCallback } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  Switch,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ScrollView,
+  ActivityIndicator
+} from "react-native";
+import { useLocalSearchParams, router } from "expo-router";
 import axios from "axios";
 import { Image } from "expo-image";
 import { useFonts } from "expo-font";
 
-const DeleteAccountPage = () => {
-  const { userID } = useLocalSearchParams();
-  const [deleteAccountError, setDeleteAccountError] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  
+const AdminEditUserPage = () => {
+  const { userID, selectedUserID } = useLocalSearchParams();
+  const [name, setName] = useState("");
+  const [image, setImage] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [email, setEmail] = useState("");
+
   const [fontsLoaded] = useFonts({
     "Silverknife-RegularItalic": require("@/assets/fonts/Silverknife-RegularItalic.otf"),
   });
@@ -26,54 +38,49 @@ const DeleteAccountPage = () => {
   const landingLogo = require("@/assets/images/HotTakesLogoWithRightText.png");
   const footerLogo = require("@/assets/images/CSUMB-COS-Logo.png");
 
-  const handleDeleteAccount = async () => {
-    // Checks to make sure that the user answered all
-    // the fields and passwords are matching
-    if (!password) {
-      setDeleteAccountError("⚠️ Please enter your password.");
-      return;
-    } else if (!confirmPassword) {
-      setDeleteAccountError("⚠️ Please re-enter your password.");
-      return;
-    } else if (password != confirmPassword) {
-      setDeleteAccountError("⚠️ Your passwords don't match.");
-      return;
-    }
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await axios.get(
+          `http://localhost:8080/users/${selectedUserID}`
+        );
+        const user = res.data;
+        setName(user.name);
+        setImage(user.image || "");
+        setIsAdmin(user.isAdmin);
+        setEmail(user.email);
+      } catch (err) {
+        Alert.alert("Error", "Failed to load user data.");
+      }
+    };
 
-    // Checks to delete the user and will be routed to home page if account deletion is successful
+    fetchUser();
+  }, [selectedUserID]);
+
+  const handleSave = async () => {
     try {
-      const response = await axios.delete(
-        `http://localhost:8080/users/${userID}`,
-        {
-          data: {
-            password: password,
-          },
-        }
-      );
-      if (
-        response.status === 200 &&
-        response.data === "✅ User deleted successfully!"
-      ) {
-        router.dismissAll();
-        router.replace("/");
+      // Update name, image, and admin status
+      await axios.patch(`http://localhost:8080/users/${selectedUserID}`, {
+        name,
+        image,
+        isAdmin,
+      });
+
+      // Update password if provided (admin override)
+      if (newPassword) {
+        await axios.put(
+          `http://localhost:8080/users/${selectedUserID}/admin-update-password`,
+          {
+            newPassword,
+          }
+        );
       }
+
+      Alert.alert("Success", "User updated successfully!");
+      router.replace(`/viewUsers?userID=${selectedUserID}`); // go back to view
     } catch (error) {
-      if (error.response) {
-        setDeleteAccountError(`${error.response.data}`);
-        console.log(
-          "Error deleting user (server response): ",
-          error.response.data
-        );
-      } else if (error.request) {
-        setDeleteAccountError("Error: No response from server");
-        console.log(
-          "Error deleting user (no server response): ",
-          error.request
-        );
-      } else {
-        setDeleteAccountError("Error: An unexpected error occurred");
-        console.log("Error deleting user (unexpected): ", error.message);
-      }
+      console.error(error);
+      Alert.alert("Error", "Failed to update user.");
     }
   };
 
@@ -104,6 +111,7 @@ const DeleteAccountPage = () => {
   };
 
   return (
+    <ScrollView style={styles.scrollContainer}>
     <View style={styles.container}>
       <View>
         <View style={styles.headerContainer}>
@@ -130,33 +138,50 @@ const DeleteAccountPage = () => {
       </View>
 
       <View style={styles.mainContent}>
-      <View style={styles.card}>
-        <Text style={styles.heading}>DELETING YOUR OWN ACCOUNT</Text>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your password"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
+        <View style={styles.card}>
+          <Text style={styles.adminEditHeader}>ADMIN: EDIT USER</Text>
+          <View style={styles.inputContainer}>
+          <Text style={styles.label}>Name</Text>
+            <TextInput
+              style={styles.input}
+              value={name}
+              onChangeText={setName}
+              placeholder="Enter new name"
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+          <Text style={styles.label}>Image URL</Text>
+            <TextInput
+              style={styles.input}
+              value={image}
+              onChangeText={setImage}
+              placeholder="Enter new image URL"
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+          <Text style={styles.label}>New Password (Optional)</Text>
+            <TextInput
+              style={styles.input}
+              value={newPassword}
+              onChangeText={setNewPassword}
+              placeholder="Enter new password"
+              secureTextEntry
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <View style={styles.switchContainer}>
+              <Text style={styles.label}>Admin Status</Text>
+              <Switch value={isAdmin} onValueChange={setIsAdmin} />
+            </View>
+          </View>
+
+          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+            <Text style={styles.saveButtonText}>Save Changes</Text>
+          </TouchableOpacity>
         </View>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Confirm Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Re-enter your password"
-            secureTextEntry
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-          />
-        </View>
-        <Text style={styles.errorText}>{deleteAccountError}</Text>
-        <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount}>
-          <Text style={styles.deleteButtonText}>Delete Account</Text>
-        </TouchableOpacity>
-      </View>
       </View>
 
       {/* Footer */}
@@ -173,6 +198,7 @@ const DeleteAccountPage = () => {
         </Text>
       </View>
     </View>
+    </ScrollView>
   );
 };
 
@@ -185,6 +211,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#1f2022",
+    display: "flex",
+    flexDirection: "column",
+    flexGrow: 1,
+    minHeight: "100vh",
   },
   headerContainer: {
     flexDirection: "row",
@@ -225,7 +255,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     minHeight: 100,
   },
-  heading: {
+  adminEditHeader: {
     fontSize: 50,
     color: "#ffcf33",
     textAlign: "center",
@@ -253,22 +283,34 @@ const styles = StyleSheet.create({
     color: "#fcfcfc",
     fontFamily: "Arial",
   },
-  deleteButton: {
+  switchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  saveButton: {
     padding: 12,
-    backgroundColor: "#761511",
+    backgroundColor: "#0CCE6B",
     borderRadius: 100,
     alignItems: "center",
     marginTop: 10,
   },
-  deleteButtonText: {
-    color: "#fcfcfc",
+  saveButtonText: {
+    color: "#0a0a0a",
     fontSize: 16,
     fontWeight: "bold",
     fontFamily: "Arial",
   },
-  errorText: {
-    color: "#e1342c",
-    fontSize: 16,
+  deleteButton: {
+    backgroundColor: "#ff3b30",
+    padding: 15,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  deleteButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
   footer: {
     backgroundColor: "#b5c8da",
@@ -295,4 +337,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DeleteAccountPage;
+export default AdminEditUserPage;

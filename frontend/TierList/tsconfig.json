@@ -1,6 +1,7 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
+    "jsx": "react",
     "strict": true,
     "paths": {
       "@/*": [
@@ -13,5 +14,5 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
-  ]
+, "app/adminDeleteAccount.tsx", "app/AdminEditUserPage.tsx", "app/createAccount.tsx", "app/deleteAccount.tsx", "app/editUser.tsx", "app/index.tsx", "app/landing.tsx", "app/login.tsx", "app/pastTierLists.tsx", "app/settings.tsx", "app/signup.tsx", "app/tierList.tsx", "app/userEditAccount.tsx", "app/viewCurrentSubjects.tsx", "app/viewUsers.tsx"  ]
 }
