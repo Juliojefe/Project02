@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,7 +6,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   CheckBox,
-  ScrollView
+  ScrollView,
+  ActivityIndicator
 } from "react-native";
 
 import { router, useLocalSearchParams } from "expo-router";
@@ -24,7 +25,11 @@ const CreateAccountPage = () => {
   });
 
   if (!fontsLoaded) {
-    return <Text>Loading...</Text>;
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
 
   const landingLogo = require("@/assets/images/HotTakesLogoWithRightText.png");
@@ -101,19 +106,25 @@ const CreateAccountPage = () => {
     }
   };
 
-  const handleHome = () => {
-    router.push(`/landing?userID=${encodeURIComponent(userID)}`);
-  };
+  const handleHome = useCallback(() => {
+    if (router.pathname !== "/landing") {
+      router.push(`/landing?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
 
   // Viewing Tier lists
-  const handleTierLists = () => {
-    router.push(`/viewCurrentSubjects?userID=${encodeURIComponent(userID)}`);
-  };
+  const handleTierLists = useCallback(() => {
+    if (router.pathname !== "/viewCurrentSubjects") {
+      router.push(`/viewCurrentSubjects?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
 
   // View Settings Functionality
-  const handleSettings = () => {
-    router.push(`/settings?userID=${encodeURIComponent(userID)}`);
-  };
+  const handleSettings = useCallback(() => {
+    if (router.pathname !== "/settings") {
+      router.push(`/settings?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
 
   // Logout Functionality
   const handleLogout = () => {
@@ -226,6 +237,11 @@ const CreateAccountPage = () => {
 };
 
 const styles = StyleSheet.create({
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "#1f2022",
+  },
   container: {
     backgroundColor: "#1f2022",
     minHeight: "100vh",

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,7 +7,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  ScrollView
+  ScrollView,
+  ActivityIndicator
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import axios from "axios";
@@ -27,7 +28,11 @@ const AdminEditUserPage = () => {
   });
 
   if (!fontsLoaded) {
-    return <Text>Loading...</Text>;
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
 
   const landingLogo = require("@/assets/images/HotTakesLogoWithRightText.png");
@@ -79,19 +84,25 @@ const AdminEditUserPage = () => {
     }
   };
 
-  const handleHome = () => {
-    router.push(`/landing?userID=${encodeURIComponent(userID)}`);
-  };
+  const handleHome = useCallback(() => {
+    if (router.pathname !== "/landing") {
+      router.push(`/landing?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
 
   // Viewing Tier lists
-  const handleTierLists = () => {
-    router.push(`/viewCurrentSubjects?userID=${encodeURIComponent(userID)}`);
-  };
+  const handleTierLists = useCallback(() => {
+    if (router.pathname !== "/viewCurrentSubjects") {
+      router.push(`/viewCurrentSubjects?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
 
   // View Settings Functionality
-  const handleSettings = () => {
-    router.push(`/settings?userID=${encodeURIComponent(userID)}`);
-  };
+  const handleSettings = useCallback(() => {
+    if (router.pathname !== "/settings") {
+      router.push(`/settings?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
 
   // Logout Functionality
   const handleLogout = () => {
@@ -192,11 +203,15 @@ const AdminEditUserPage = () => {
 };
 
 const styles = StyleSheet.create({
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "#1f2022",
+  },
   container: {
     flex: 1,
     backgroundColor: "#1f2022",
     display: "flex",
-    flex: 1,
     flexDirection: "column",
     flexGrow: 1,
     minHeight: "100vh",

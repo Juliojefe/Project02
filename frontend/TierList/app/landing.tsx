@@ -1,9 +1,8 @@
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, React } from "react";
 import axios from "axios";
 import { Image } from "expo-image";
-import React from "react";
 
 const LandingPage = () => {
   // visibility of admin buttons (should only be visible to admin users)
@@ -35,12 +34,6 @@ const LandingPage = () => {
     }
   };
 
-  // Viewing Tier lists
-  // currently goes to creating a tier list
-  const handleTierLists = () => {
-    router.push(`/viewCurrentSubjects?userID=${encodeURIComponent(userID)}`);
-  };
-
   const handlePastTierLists = () => {
     router.push(`/pastTierLists?userID=${encodeURIComponent(userID)}`);
   };
@@ -59,22 +52,31 @@ const LandingPage = () => {
     router.push(`/createAccount?userID=${encodeURIComponent(userID)}`);
   };
 
+  const handleHome = useCallback(() => {
+    if (router.pathname !== "/landing") {
+      router.push(`/landing?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
+
+  // Viewing Tier lists
+  const handleTierLists = useCallback(() => {
+    if (router.pathname !== "/viewCurrentSubjects") {
+      router.push(`/viewCurrentSubjects?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
+
   // View Settings Functionality
-  const handleSettings = () => {
-    // not very security safe since userID can be changed in link to view another user's account
-    router.push(`/settings?userID=${encodeURIComponent(userID)}`);
-  };
+  const handleSettings = useCallback(() => {
+    if (router.pathname !== "/settings") {
+      router.push(`/settings?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
 
   // Logout Functionality
   const handleLogout = () => {
-    // should go back to home page
     router.dismissAll();
     router.replace("/");
   };
-
-  const handleHome = () => {
-    router.push(`/landing?userID=${encodeURIComponent(userID)}`)
-  }
 
   if (loading) {
     return (

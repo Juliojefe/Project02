@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   View,
   Text,
@@ -70,7 +70,11 @@ export default function SimilarTierLists() {
   });
 
   if (!fontsLoaded) {
-    return <Text>Loading...</Text>;
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
 
   const landingLogo = require("@/assets/images/HotTakesLogoWithRightText.png");
@@ -253,19 +257,25 @@ export default function SimilarTierLists() {
     );
   }
 
-  const handleHome = () => {
-    router.push(`/landing?userID=${encodeURIComponent(userID)}`);
-  };
+  const handleHome = useCallback(() => {
+    if (router.pathname !== "/landing") {
+      router.push(`/landing?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
 
   // Viewing Tier lists
-  const handleTierLists = () => {
-    router.push(`/viewCurrentSubjects?userID=${encodeURIComponent(userID)}`);
-  };
+  const handleTierLists = useCallback(() => {
+    if (router.pathname !== "/viewCurrentSubjects") {
+      router.push(`/viewCurrentSubjects?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
 
   // View Settings Functionality
-  const handleSettings = () => {
-    router.push(`/settings?userID=${encodeURIComponent(userID)}`);
-  };
+  const handleSettings = useCallback(() => {
+    if (router.pathname !== "/settings") {
+      router.push(`/settings?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
 
   // Logout Functionality
   const handleLogout = () => {
@@ -516,7 +526,7 @@ const styles = StyleSheet.create({
   },
   date: {
     fontSize: 14,
-    color: "#4e5056",
+    color: "#ccc",
     marginBottom: 8,
     fontFamily: "Arial",
   },
@@ -538,6 +548,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   rankText: {
+    color: "#0a0a0a",
     fontSize: 18,
     fontWeight: "bold",
     fontFamily: "Arial",
@@ -553,7 +564,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   actionButton: {
-    backgroundColor: "#91cf4c",
+    backgroundColor: "#0cce6b",
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 6,

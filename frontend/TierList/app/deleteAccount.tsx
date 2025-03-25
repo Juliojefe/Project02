@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useState, useCallback } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import axios from "axios";
 import { Image } from "expo-image";
@@ -16,7 +16,11 @@ const DeleteAccountPage = () => {
   });
 
   if (!fontsLoaded) {
-    return <Text>Loading...</Text>;
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
 
   const landingLogo = require("@/assets/images/HotTakesLogoWithRightText.png");
@@ -73,19 +77,25 @@ const DeleteAccountPage = () => {
     }
   };
 
-  const handleHome = () => {
-    router.push(`/landing?userID=${encodeURIComponent(userID)}`);
-  };
+  const handleHome = useCallback(() => {
+    if (router.pathname !== "/landing") {
+      router.push(`/landing?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
 
   // Viewing Tier lists
-  const handleTierLists = () => {
-    router.push(`/viewCurrentSubjects?userID=${encodeURIComponent(userID)}`);
-  };
+  const handleTierLists = useCallback(() => {
+    if (router.pathname !== "/viewCurrentSubjects") {
+      router.push(`/viewCurrentSubjects?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
 
   // View Settings Functionality
-  const handleSettings = () => {
-    router.push(`/settings?userID=${encodeURIComponent(userID)}`);
-  };
+  const handleSettings = useCallback(() => {
+    if (router.pathname !== "/settings") {
+      router.push(`/settings?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
 
   // Logout Functionality
   const handleLogout = () => {
@@ -167,6 +177,11 @@ const DeleteAccountPage = () => {
 };
 
 const styles = StyleSheet.create({
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "#1f2022",
+  },
   container: {
     flex: 1,
     backgroundColor: "#1f2022",

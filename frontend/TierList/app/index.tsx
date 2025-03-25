@@ -1,7 +1,8 @@
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
 import { Image } from "expo-image";
 import { useFonts } from "expo-font";
+import React from "react";
 
 const Index = () => {
   // Correctly load the font using useFonts hook
@@ -10,7 +11,11 @@ const Index = () => {
   });
 
   if (!fontsLoaded) {
-    return <Text>Loading...</Text>;
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
 
   const logo = require("@/assets/images/HotTakesLogo.png");
@@ -71,6 +76,11 @@ const Index = () => {
 };
 
 const styles = StyleSheet.create({
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "#1f2022",
+  },
   container: {
     flex: 1,
     flexDirection: "row",

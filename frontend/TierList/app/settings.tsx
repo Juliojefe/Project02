@@ -1,7 +1,8 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Image } from "expo-image";
 import { useFonts } from "expo-font";
+import React, { useCallback } from "react";
 
 const SettingsPage = () => {
   const { userID } = useLocalSearchParams();
@@ -12,7 +13,11 @@ const SettingsPage = () => {
   });
 
   if (!fontsLoaded) {
-    return <Text>Loading...</Text>;
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
 
   const landingLogo = require("@/assets/images/HotTakesLogoWithRightText.png");
@@ -27,19 +32,25 @@ const SettingsPage = () => {
     router.push(`/deleteAccount?userID=${encodeURIComponent(userIdValue)}`);
   };
 
-  const handleHome = () => {
-    router.push(`/landing?userID=${encodeURIComponent(userID)}`);
-  };
+  const handleHome = useCallback(() => {
+    if (router.pathname !== "/landing") {
+      router.push(`/landing?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
 
   // Viewing Tier lists
-  const handleTierLists = () => {
-    router.push(`/viewCurrentSubjects?userID=${encodeURIComponent(userID)}`);
-  };
+  const handleTierLists = useCallback(() => {
+    if (router.pathname !== "/viewCurrentSubjects") {
+      router.push(`/viewCurrentSubjects?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
 
   // View Settings Functionality
-  const handleSettings = () => {
-    router.push(`/settings?userID=${encodeURIComponent(userID)}`);
-  };
+  const handleSettings = useCallback(() => {
+    if (router.pathname !== "/settings") {
+      router.push(`/settings?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
 
   // Logout Functionality
   const handleLogout = () => {
@@ -105,6 +116,11 @@ const SettingsPage = () => {
 };
 
 const styles = StyleSheet.create({
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "#1f2022",
+  },
   container: {
     flex: 1,
     backgroundColor: "#1f2022",
@@ -149,7 +165,7 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
   changeDetailsButton: {
-    backgroundColor: "#91cf4c",
+    backgroundColor: "#0cce6b",
     paddingVertical: 15,
     paddingHorizontal: 25,
     borderRadius: 100,
@@ -157,7 +173,7 @@ const styles = StyleSheet.create({
   },
   changeDetailsButtonText: {
     fontSize: 20,
-    color: "#0a0a0a",
+    color: "#fcfcfc",
     fontFamily: "Arial",
     fontWeight: "bold",
   },

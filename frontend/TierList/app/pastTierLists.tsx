@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -56,7 +56,11 @@ const PastTierLists = () => {
   });
 
   if (!fontsLoaded) {
-    return <Text>Loading...</Text>;
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
 
   const landingLogo = require("@/assets/images/HotTakesLogoWithRightText.png");
@@ -182,7 +186,7 @@ const PastTierLists = () => {
             )
           }
         >
-          <Text style={styles.buttonText}>Edit</Text>
+          <Text style={styles.editButtonText}>Edit</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.similarButton}
@@ -192,25 +196,31 @@ const PastTierLists = () => {
             )
           }
         >
-          <Text style={styles.buttonText}>Similar Tier Lists</Text>
+          <Text style={styles.similarButtonText}>Similar Tier Lists</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 
-  const handleHome = () => {
-    router.push(`/landing?userID=${encodeURIComponent(userID)}`);
-  };
+  const handleHome = useCallback(() => {
+    if (router.pathname !== "/landing") {
+      router.push(`/landing?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
 
   // Viewing Tier lists
-  const handleTierLists = () => {
-    router.push(`/viewCurrentSubjects?userID=${encodeURIComponent(userID)}`);
-  };
+  const handleTierLists = useCallback(() => {
+    if (router.pathname !== "/viewCurrentSubjects") {
+      router.push(`/viewCurrentSubjects?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
 
   // View Settings Functionality
-  const handleSettings = () => {
-    router.push(`/settings?userID=${encodeURIComponent(userID)}`);
-  };
+  const handleSettings = useCallback(() => {
+    if (router.pathname !== "/settings") {
+      router.push(`/settings?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
 
   // Logout Functionality
   const handleLogout = () => {
@@ -356,7 +366,7 @@ const styles = StyleSheet.create({
   },
   date: {
     fontSize: 14,
-    color: "#4E5056",
+    color: "#ccc",
     marginBottom: 12,
     fontFamily: "Arial",
   },
@@ -405,7 +415,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   similarButton: {
-    backgroundColor: "#91cf4c",
+    backgroundColor: "#0cce6b",
     padding: 10,
     borderRadius: 10,
     marginLeft: "auto",
@@ -416,8 +426,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontFamily: "Arial",
   },
-  buttonText: {
-    color: "0a0a0a",
+  editButtonText: {
+    color: "#0a0a0a",
+    fontWeight: "600",
+    textAlign: "center",
+    fontFamily: "Arial",
+  },
+  similarButtonText: {
+    color: "#0a0a0a",
     fontWeight: "600",
     textAlign: "center",
     fontFamily: "Arial",

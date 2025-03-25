@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { useState, useEffect, React } from "react";
+import { useState, useEffect, React, useCallback } from "react";
 import axios from "axios";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { Menu, MenuOptions, MenuOption, MenuTrigger, MenuProvider, } from "react-native-popup-menu";
@@ -20,11 +20,9 @@ const ViewUsersPage = () => {
 
   if (!fontsLoaded) {
     return (
-      <SafeAreaProvider>
-        <SafeAreaView style={styles.container}>
-          <Text>Loading Fonts...</Text>
-        </SafeAreaView>
-      </SafeAreaProvider>
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
+      </View>
     );
   }
 
@@ -54,19 +52,25 @@ const ViewUsersPage = () => {
     router.push(`/adminDeleteAccount?userID=${encodeURIComponent(userID)}&selectedUserID=${encodeURIComponent(id)}`);
   };
 
-  const handleHome = () => {
-    router.push(`/landing?userID=${encodeURIComponent(userID)}`);
-  };
+  const handleHome = useCallback(() => {
+    if (router.pathname !== "/landing") {
+      router.push(`/landing?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
 
   // Viewing Tier lists
-  const handleTierLists = () => {
-    router.push(`/viewCurrentSubjects?userID=${encodeURIComponent(userID)}`);
-  };
+  const handleTierLists = useCallback(() => {
+    if (router.pathname !== "/viewCurrentSubjects") {
+      router.push(`/viewCurrentSubjects?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
 
   // View Settings Functionality
-  const handleSettings = () => {
-    router.push(`/settings?userID=${encodeURIComponent(userID)}`);
-  };
+  const handleSettings = useCallback(() => {
+    if (router.pathname !== "/settings") {
+      router.push(`/settings?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
 
   // Logout Functionality
   const handleLogout = () => {
