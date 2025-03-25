@@ -1,20 +1,39 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  CheckBox
+  CheckBox,
+  ScrollView,
+  ActivityIndicator
 } from "react-native";
 
 import { router, useLocalSearchParams } from "expo-router";
 import axios from "axios";
+import { Image } from "expo-image";
+import { useFonts } from "expo-font";
 
 const CreateAccountPage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [createError, setCreateError] = useState("");
   const { userID } = useLocalSearchParams();
+
+  const [fontsLoaded] = useFonts({
+    "Silverknife-RegularItalic": require("@/assets/fonts/Silverknife-RegularItalic.otf"),
+  });
+
+  if (!fontsLoaded) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  const landingLogo = require("@/assets/images/HotTakesLogoWithRightText.png");
+  const footerLogo = require("@/assets/images/CSUMB-COS-Logo.png");
 
   const [user, setUser] = useState({
     name: "",
@@ -87,122 +106,237 @@ const CreateAccountPage = () => {
     }
   };
 
+  const handleHome = useCallback(() => {
+    if (router.pathname !== "/landing") {
+      router.push(`/landing?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
+
+  // Viewing Tier lists
+  const handleTierLists = useCallback(() => {
+    if (router.pathname !== "/viewCurrentSubjects") {
+      router.push(`/viewCurrentSubjects?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
+
+  // View Settings Functionality
+  const handleSettings = useCallback(() => {
+    if (router.pathname !== "/settings") {
+      router.push(`/settings?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
+
+  // Logout Functionality
+  const handleLogout = () => {
+    router.dismissAll();
+    router.replace("/");
+  };
+
   return (
+    <ScrollView style={styles.scrollContainer}>
     <View style={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.heading}>Create an Account</Text>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Name</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter Name"
-            value={user.name}
-            onChangeText={(text) => handleChange("name", text)}
+      <View>
+        <View style={styles.headerContainer}>
+          <Image
+            source={landingLogo}
+            style={styles.logoImage}
+            resizeMode="contain"
           />
         </View>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter Email"
-            value={user.email}
-            onChangeText={(text) => handleChange("email", text)}
-          />
+        <View style={styles.navbar}>
+          <TouchableOpacity style={styles.navButton} onPress={handleHome}>
+            Home
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navButton} onPress={handleTierLists}>
+            Create new Tier List
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navButton} onPress={handleSettings}>
+            Settings
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navButton} onPress={handleLogout}>
+            Log Out
+          </TouchableOpacity>
         </View>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter password"
-            secureTextEntry
-            value={user.password}
-            onChangeText={(text) => handleChange("password", text)}
-          />
+      </View>
+
+      <View style={styles.mainContent}>
+        <View style={styles.card}>
+          <Text style={styles.heading}>CREATE A NEW ACCOUNT</Text>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Name"
+              value={user.name}
+              onChangeText={(text) => handleChange("name", text)}
+            />
+          </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Email"
+              value={user.email}
+              onChangeText={(text) => handleChange("email", text)}
+            />
+          </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Password</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter password"
+              secureTextEntry
+              value={user.password}
+              onChangeText={(text) => handleChange("password", text)}
+            />
+          </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Confirm Password</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Re-enter password"
+              secureTextEntry
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+            />
+          </View>
+          <View style={styles.checkboxContainer}>
+            <Text style={styles.label}>{`Admin User?    `}</Text>
+            <CheckBox
+              value={user.isAdmin}
+              onValueChange={(boolean) => handleChange("isAdmin", boolean)}
+              style={styles.checkbox}
+            />
+          </View>
+          <Text style={styles.errorText}>{createError}</Text>
+          <TouchableOpacity
+            style={styles.createAccountButton}
+            onPress={handleCreateAccount}
+          >
+            <Text style={styles.createAccountButtonText}>Create Account</Text>
+          </TouchableOpacity>
         </View>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Confirm Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Re-enter password"
-            secureTextEntry
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-          />
-        </View>
-        <View style={styles.checkboxContainer}>
-          <Text style={styles.label}>
-            {`Admin User?    `}
-          </Text>
-          <CheckBox
-            value={user.isAdmin}
-            onValueChange={(boolean) => handleChange("isAdmin", boolean)}
-            style={styles.checkbox}
-          />
-        </View>
-        <Text style={styles.errorText}>{createError}</Text>
-        <TouchableOpacity style={styles.button} onPress={handleCreateAccount}>
-          <Text style={styles.buttonText}>Create Account</Text>
-        </TouchableOpacity>
+      </View>
+
+      {/* Footer */}
+      <View style={styles.footer}>
+        <Image
+          source={footerLogo}
+          style={styles.footerImage}
+          resizeMode="contain"
+        />
+        <Text style={styles.footerText}>
+          CST438 2025© Jayson Basilio, Julio Fernandez, Ozzie Munoz, Ahmed Torki
+          <br />
+          Tier List Project 02 - Hot Takes
+        </Text>
       </View>
     </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  centered: {
     flex: 1,
     justifyContent: "center",
+    backgroundColor: "#1f2022",
+  },
+  container: {
+    backgroundColor: "#1f2022",
+    minHeight: "100vh",
+    display: "flex",
+    flex: 1,
+    flexDirection: "column",
+    flexGrow: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+  },
+  headerContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f0f2f5",
+    backgroundColor: "#0a0a0a",
+  },
+  logoImage: {
+    width: "18%",
+    height: undefined,
+    aspectRatio: 2.5,
+  },
+  navbar: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingBottom: 20,
+    backgroundColor: "#0a0a0a",
+  },
+  navButton: {
+    paddingHorizontal: 15,
+    color: "#fcfcfc",
+    fontWeight: "bold",
+    fontFamily: "Arial",
+  },
+  mainContent: {
+    flex: 1,
+    marginTop: "2%",
+    justifyContent: "flex-start",
+    alignItems: "center",
+    marginBottom: 100,
   },
   card: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#131515",
     padding: 20,
     borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    width: 300,
+    width: "30%",
+    minHeight: "100%",
+    flexGrow: 1,
   },
   heading: {
-    fontSize: 22,
-    color: "#333",
+    fontSize: "250%",
+    color: "#ffcf33",
     textAlign: "center",
     marginBottom: 20,
+    fontFamily: "Silverknife-RegularItalic",
+    letterSpacing: 2,
   },
   inputContainer: {
     marginBottom: 15,
   },
   label: {
     fontWeight: "bold",
-    color: "#555",
+    color: "#fcfcfc",
     marginBottom: 5,
+    fontFamily: "Arial",
   },
   input: {
     width: "100%",
     padding: 10,
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#4E5056",
     borderRadius: 5,
     fontSize: 14,
-    backgroundColor: "#fff",
+    backgroundColor: "#131515",
+    color: "#fcfcfc",
+    fontFamily: "Arial",
   },
-  button: {
+  createAccountButton: {
     padding: 12,
-    backgroundColor: "#007bff",
-    borderRadius: 5,
+    backgroundColor: "#f07b16",
+    borderRadius: 100,
     alignItems: "center",
     marginTop: 10,
   },
-  buttonText: {
-    color: "white",
-    fontSize: 16,
+  createAccountButtonText: {
+    color: "#fcfcfc",
+    fontWeight: "bold",
+    fontSize: 19,
+    fontFamily: "Arial",
   },
   errorText: {
-    color: "red",
+    color: "#e1342c",
     fontSize: 16,
+    fontFamily: "Arial",
   },
   checkboxContainer: {
     flexDirection: "row",
@@ -212,8 +346,28 @@ const styles = StyleSheet.create({
   checkbox: {
     alignSelf: "center",
   },
-  checkBoxLabel: {
-    margin: 8,
+  footer: {
+    backgroundColor: "#b5c8da",
+    paddingVertical: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    borderTopWidth: 2,
+    borderTopColor: "#fcfcfc",
+    marginTop: "auto",
+  },
+  footerImage: {
+    width: 125,
+    height: 40,
+    marginBottom: 5,
+    resizeMode: "contain",
+  },
+  footerText: {
+    color: "#31456b",
+    fontSize: 14,
+    marginBottom: 5,
+    textAlign: "center",
+    justifyContent: "center",
+    fontFamily: "Arial",
   },
 });
 

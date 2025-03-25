@@ -4,10 +4,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   FlatList,
+  ActivityIndicator,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, React, useCallback } from "react";
 import axios from "axios";
+import { Image } from "expo-image";
+import { useFonts } from "expo-font";
 
 const ViewCurrentSubjectsPage = () => {
   const { userID } = useLocalSearchParams();
@@ -15,22 +18,36 @@ const ViewCurrentSubjectsPage = () => {
   const [selectedId, setSelectedId] = useState(null);
   const [subjects, setSubjects] = useState([]);
 
+  const [fontsLoaded] = useFonts({
+    "Silverknife-RegularItalic": require("@/assets/fonts/Silverknife-RegularItalic.otf"),
+  });
+
+  if (!fontsLoaded) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  const landingLogo = require("@/assets/images/HotTakesLogoWithRightText.png");
+  const footerLogo = require("@/assets/images/CSUMB-COS-Logo.png");
+
   useEffect(() => {
+    const handleGetSubjects = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:8080/api/subjects/current`
+        );
+        setSubjects(response.data);
+      } catch (error) {
+        console.log("Error getting current subjects of the week: ", error);
+      } finally {
+        setLoading(false);
+      }
+    };
     handleGetSubjects();
   }, []);
-
-  const handleGetSubjects = async () => {
-    try {
-      const response = await axios.get(
-        `http://localhost:8080/api/subjects/current`
-      );
-      setSubjects(response.data);
-    } catch (error) {
-      console.log("Error getting current subjects of the week: ", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Turns the subject names into proper casing with the first letter of each word capitalized
   function titleCase(str) {
@@ -44,18 +61,16 @@ const ViewCurrentSubjectsPage = () => {
   }
 
   const Item = ({ item, onPress, backgroundColor, textColor }) => (
-    <TouchableOpacity onPress={onPress} style={[styles.item, { backgroundColor }]}>
-      <Text style={[styles.title, { color: textColor }]}>{titleCase(item.name.toLowerCase())}</Text>
+    <TouchableOpacity onPress={onPress} style={[styles.subjectItem, { backgroundColor }]}>
+      <Text style={[styles.subjectTitle, { color: textColor }]}>{titleCase(item.name.toLowerCase())}</Text>
     </TouchableOpacity>
   );
 
   const renderSubjectItem = ({ item }) => {
-    const backgroundColor = item.subjectId === selectedId ? "#a4d8d8" : "#a4d8d8";
-    const color = item.subjectId === selectedId ? "black" : "black";
   
     return (
       <Item
-        style={styles.item}
+        style={styles.subjectItem}
         item={item}
         onPress={() => {
           setSelectedId(item.subjectId);
@@ -65,85 +80,183 @@ const ViewCurrentSubjectsPage = () => {
     );
   };
 
+  const handleHome = useCallback(() => {
+    if (router.pathname !== "/landing") {
+      router.push(`/landing?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
+
+  // Viewing Tier lists
+  const handleTierLists = useCallback(() => {
+    if (router.pathname !== "/viewCurrentSubjects") {
+      router.push(`/viewCurrentSubjects?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
+
+  // View Settings Functionality
+  const handleSettings = useCallback(() => {
+    if (router.pathname !== "/settings") {
+      router.push(`/settings?userID=${encodeURIComponent(userID)}`);
+    }
+  }, [userID]);
+
+  // Logout Functionality
+  const handleLogout = () => {
+    router.dismissAll();
+    router.replace("/");
+  };
+
   if (loading) {
     return (
-      <View style={styles.container}>
-        <Text>Loading...</Text>
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Text>Current Subjects for this week</Text>
-      <FlatList
-        data={subjects}
-        renderItem={renderSubjectItem}
-        keyExtractor={(item) => item.subjectId.toString()}
-      />
+      <View>
+        <View style={styles.headerContainer}>
+          <Image
+            source={landingLogo}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={styles.navbar}>
+          <TouchableOpacity style={styles.navButton} onPress={handleHome}>
+            Home
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navButton} onPress={handleTierLists}>
+            Create new Tier List
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navButton} onPress={handleSettings}>
+            Settings
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navButton} onPress={handleLogout}>
+            Log Out
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <Text style={styles.subjectsHeader}>CURRENT SUBJECTS FOR THE WEEK</Text>
+      <Text style={styles.subjectsDescription}>Choose one of the following subjects and create a tier list. </Text>
+      <View style={styles.flatListContainer}>
+        <FlatList
+          data={subjects}
+          renderItem={renderSubjectItem}
+          keyExtractor={(item) => item.subjectId.toString()}
+        />
+      </View>
+
+      {/* Footer */}
+      <View style={styles.footer}>
+        <Image
+          source={footerLogo}
+          style={styles.footerImage}
+          resizeMode="contain"
+        />
+        <Text style={styles.footerText}>
+          CST438 2025© Jayson Basilio, Julio Fernandez, Ozzie Munoz, Ahmed Torki
+          <br />
+          Tier List Project 02 - Hot Takes
+        </Text>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    backgroundColor: "#1f2022",
+  },
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 20, // Add padding for better spacing
+    backgroundColor: "#1f2022",
   },
-  item: {
+  headerContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#0a0a0a",
+  },
+  logoImage: {
+    width: "18%",
+    height: undefined,
+    aspectRatio: 2.5,
+  },
+  navbar: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingBottom: 20,
+    backgroundColor: "#0a0a0a",
+  },
+  navButton: {
+    paddingHorizontal: 15,
+    color: "#fcfcfc",
+    fontWeight: "bold",
+    fontFamily: "Arial",
+  },
+  subjectsHeader: {
+    fontSize: 50,
+    color: "#ffcf33",
+    textAlign: "center",
+    marginTop: 20,
+    marginBottom: 5,
+    fontFamily: "Silverknife-RegularItalic",
+    letterSpacing: 2,
+  },
+  subjectsDescription: {
+    fontSize: 16,
+    color: "#fcfcfc",
+    textAlign: "center",
+    marginBottom: 20,
+    fontFamily: "Arial",
+  },
+  flatListContainer: {
+    alignItems: "center",
+    justifyContent: 'center',
+  },
+  subjectItem: {
     padding: 20,
-    marginVertical: 8,
-    marginHorizontal: 16,
-    borderRadius: 8,
-    backgroundColor: "#fcba03",
-    color: "#000",
+    marginVertical: 10,
+    borderRadius: 100,
+    backgroundColor: "#761511",
     justifyContent: "center",
     alignItems: "center", 
   },
-  title: {
-    fontSize: 16,
+  subjectTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#fcfcfc",
+    fontFamily: "Arial",
   },
-  button: {
-    backgroundColor: "#227755",
-    padding: 10,
-    borderRadius: 10,
-    marginTop: 10,
+  footer: {
+    backgroundColor: "#b5c8da",
+    paddingVertical: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    borderTopWidth: 2,
+    borderTopColor: "#fcfcfc",
+    marginTop: "auto",
   },
-  buttonText: {
-    fontSize: 15,
-    color: "#fff",
+  footerImage: {
+    width: 125,
+    height: 40,
+    marginBottom: 5,
+    resizeMode: "contain",
   },
-  adminButton: {
-    backgroundColor: "#0D0208",
-    padding: 10,
-    borderRadius: 10,
-    marginTop: 10,
-  },
-  adminButtonText: {
-    fontSize: 15,
-    color: "#00FF41",
-  },
-  settingsButton: {
-    backgroundColor: "#898989",
-    padding: 10,
-    borderRadius: 10,
-    marginTop: 10,
-  },
-  settingsButtonText: {
-    fontSize: 15,
-    color: "#fff",
-  },
-  logoutButton: {
-    backgroundColor: "#FF0000",
-    padding: 10,
-    borderRadius: 10,
-    marginTop: 10,
-  },
-  logoutButtonText: {
-    fontSize: 15,
-    color: "#fff",
+  footerText: {
+    color: "#31456b",
+    fontSize: 14,
+    marginBottom: 5,
+    textAlign: "center",
+    justifyContent: "center",
+    fontFamily: "Arial",
   },
 });
 

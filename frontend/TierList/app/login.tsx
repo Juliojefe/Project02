@@ -5,13 +5,31 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  ActivityIndicator
 } from "react-native";
 
 import { router } from "expo-router";
 import axios from "axios";
+import { Image } from "expo-image";
+import { useFonts } from "expo-font";
 
 const LoginPage = () => {
   const [loginError, setLoginError] = useState("");
+
+  const [fontsLoaded] = useFonts({
+    "Silverknife-RegularItalic": require("@/assets/fonts/Silverknife-RegularItalic.otf"),
+  });
+
+  if (!fontsLoaded) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  const logo = require("@/assets/images/HotTakesLogo.png");
+  const footerLogo = require("@/assets/images/CSUMB-COS-Logo.png");
 
   const [user, setUser] = useState({
     email: "",
@@ -66,10 +84,15 @@ const LoginPage = () => {
     }
   };
 
+  const handleSignup = () => {
+    router.push("/signup");
+  }
+
   return (
     <View style={styles.container}>
+      <Image source={logo} style={styles.logoImage} resizeMode="contain" />
       <View style={styles.card}>
-        <Text style={styles.heading}>Welcome Back!</Text>
+        <Text style={styles.title}>LOG IN</Text>
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Email</Text>
           <TextInput
@@ -90,69 +113,138 @@ const LoginPage = () => {
           />
         </View>
         <Text style={styles.errorText}>{loginError}</Text>
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Login</Text>
+        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+          <Text style={styles.loginButtonText}>Log In</Text>
         </TouchableOpacity>
+        <Text style={styles.accountText}><br/><br/>
+        Don't have an account? {" "}
+        <TouchableOpacity onPress={handleSignup}>
+          <Text style={styles.signupLink}>Sign Up</Text>
+        </TouchableOpacity>
+        </Text>
+      </View>
+      {/* Footer */}
+      <View style={styles.footer}>
+        <Image
+          source={footerLogo}
+          style={styles.footerImage}
+          resizeMode="contain"
+        />
+        <Text style={styles.footerText}>
+          CST438 2025© Jayson Basilio, Julio Fernandez, Ozzie Munoz, Ahmed Torki
+          <br />
+          Tier List Project 02 - Hot Takes
+        </Text>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  centered: {
     flex: 1,
     justifyContent: "center",
+    backgroundColor: "#1f2022",
+  },
+  container: {
+    flex: 1,
+    justifyContent: "flex-start",
     alignItems: "center",
-    backgroundColor: "#f0f2f5",
+    backgroundColor: "#0a0a0a",
+  },
+  logoImage: {
+    width: "5%",
+    height: undefined,
+    aspectRatio: 1,
+    margin: "1%",
   },
   card: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#1f2022",
     padding: 20,
     borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    width: 300,
+    width: "30%",
+    height: "60%",
   },
-  heading: {
-    fontSize: 22,
-    color: "#333",
+  title: {
+    fontSize: "300%",
+    color: "#ffcf33",
     textAlign: "center",
     marginBottom: 20,
+    fontFamily: "Silverknife-RegularItalic",
+    letterSpacing: 2,
   },
   inputContainer: {
     marginBottom: 15,
   },
   label: {
     fontWeight: "bold",
-    color: "#555",
+    color: "#fcfcfc",
     marginBottom: 5,
+    fontFamily: "Arial",
   },
   input: {
     width: "100%",
     padding: 10,
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#4E5056",
     borderRadius: 5,
     fontSize: 14,
-    backgroundColor: "#fff",
+    backgroundColor: "#1f2022",
+    color: "#fcfcfc",
+    fontFamily: "Arial",
   },
-  button: {
+  loginButton: {
     padding: 12,
-    backgroundColor: "#007bff",
-    borderRadius: 5,
+    backgroundColor: "#e1342c",
+    borderRadius: 100,
     alignItems: "center",
     marginTop: 10,
   },
-  buttonText: {
+  loginButtonText: {
     color: "white",
-    fontSize: 16,
+    fontWeight: "bold",
+    fontSize: 19,
+    fontFamily: "Arial",
+  },
+  accountText: {
+    color: "#737476",
+    fontSize: 15,
+    fontFamily: "Arial",
+  },
+  signupLink: {
+    color: "#1d9bf2",
+    fontFamily: "Arial",
   },
   errorText: {
-    color: "red",
+    color: "#e1342c",
     fontSize: 16,
+    fontFamily: "Arial",
+  },
+  footer: {
+    position: "absolute",
+    bottom: "0%",
+    left: "0%",
+    right: "0%",
+    backgroundColor: "#b5c8da",
+    paddingVertical: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    borderTopWidth: 2,
+    borderTopColor: "#fcfcfc",
+  },
+  footerImage: {
+    width: 125,
+    height: 40,
+    marginBottom: 5,
+    resizeMode: "contain",
+  },
+  footerText: {
+    color: "#31456b",
+    fontSize: 14,
+    marginBottom: 5,
+    textAlign: "center",
+    justifyContent: "center",
+    fontFamily: "Arial",
   },
 });
 
